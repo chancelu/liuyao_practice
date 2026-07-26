@@ -7,8 +7,8 @@ import { HexagramFigure } from './YaoStroke';
 import { ChevronDown, ChevronRight, BookOpen, GraduationCap, ScrollText } from 'lucide-react';
 import { BRANCH_ELEMENT, elemRelation, LIUSHEN_ELEMENT, SEASON_WANG, CHANGSHENG_START, BRANCHES, TRIGRAM_NATURE } from '../../lib/liuyao/constants';
 import { palaceWalk } from '../../lib/liuyao/teaching';
-import { StepAsk } from './TutorChat';
-import { buildGuaContext, buildSystemPrompt } from '../../lib/liuyao/tutorContext';
+import { StepAsk, AiVerdict } from './TutorChat';
+import { buildGuaContext, buildSystemPrompt, buildVerdictPrompt } from '../../lib/liuyao/tutorContext';
 
 interface Step { no: number; title: string; subtitle: string }
 
@@ -374,6 +374,8 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
             <ul className="mt-0.5 space-y-0.5">{it.yingqi.map((y, i) => <li key={i}>· {y}</li>)}</ul>
           </div>
         )}
+        {/* AI 完整断卦：把整盘卦串成小白能懂的完整分析 */}
+        <AiVerdict systemPrompt={buildVerdictPrompt()} guaContext={guaCtx} />
         <Teach title="断卦思路回顾（读卦顺序）">
           <p>① 先看<b>用神</b>旺衰死活——这是吉凶的主轴；② 再看<b>原神忌神</b>谁旺谁动——这是吉凶的变数；③ 看<b>动爻</b>化进化退、回头生克——这是事情的走向；④ 兼看<b>世应</b>生合冲克——这是人我关系；⑤ 参看<b>卦格</b>（六冲主散、六合主合、反伏吟主反复忧吟）与<b>六神</b>取象；⑥ 最后以「空待出空、墓待冲开、静旺待冲、动待值合」推<b>应期</b>。</p>
           <p className="text-[#8a6a4a]">切记：六爻明阴阳、示吉凶，反映的是一定坐标基础上的发展趋势，不可无条件妄断铁口（卷三·第三课）。</p>

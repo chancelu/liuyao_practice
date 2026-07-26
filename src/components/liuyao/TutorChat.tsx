@@ -1,7 +1,7 @@
 // Kimi 助教客户端：流式问答（通过本地 dev 服务器代理 /api/tutor）
 // API Key 由使用者手动填入，仅存浏览器 localStorage，随请求头发给本地代理，不落任何文件
 import { useEffect, useRef, useState } from 'react';
-import { Send, Loader2, MessageCircleQuestion, X, KeyRound, Trash2 } from 'lucide-react';
+import { Send, Loader2, MessageCircleQuestion, X, KeyRound, Trash2, Sparkles, RefreshCw } from 'lucide-react';
 
 export interface ChatMsg { role: 'user' | 'assistant' | 'system'; content: string }
 
@@ -295,6 +295,81 @@ export function StepAsk({ stepTitle, systemPrompt, guaContext }: {
           <TutorPanel systemPrompt={systemPrompt} guaContext={guaContext} placeholder={`就「${stepTitle}」提问，如：这一步为什么这么定？`} />
         </div>
       )}
+    </div>
+  );
+}
+
+/** AI 综合断卦：完整分析 + 应期 + 决策 + 化解（流式，面向小白） */
+export function AiVerdict({ systemPrompt, guaContext }: { systemPrompt: string; guaContext: string }) {
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  // 卦局变化时清空旧断卦，避免张冠李戴
+  const ctxKey = guaContext.slice(0, 200);
+  const prevKey = useRef(ctxKey);
+  useEffect(() => {
+    if (prevKey.current !== ctxKey) {
+      prevKey.current = ctxKey;
+      setText('');
+      setError('');
+    }
+  }, [ctxKey]);
+
+  const run = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError('');
+    setText('');
+    try {
+      const ans = await askTutor(
+        systemPrompt,
+        guaContext,
+        [{ role: 'user', content: '请基于以上卦局数据，对我所问之事做完整综合断卦。' }],
+        (partial) => setText(partial),
+      );
+      setText(ans || '（助教未返回内容）');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mb-3 rounded-lg border-2 border-[#7c5cd6] bg-gradient-to-br from-[#f7f3ff] to-[#fdfbf7] overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-2 bg-[#7c5cd6] text-white">
+        <span className="text-xs font-bold flex items-center gap-1.5">
+          <Sparkles size={13} /> AI 完整断卦 · Kimi K3（结论 / 应期 / 决策 / 化解）
+        </span>
+        {text && !busy && (
+          <button onClick={run} className="flex items-center gap-1 text-[11px] bg-white/15 hover:bg-white/25 rounded px-2 py-0.5">
+            <RefreshCw size={11} /> 重新断
+          </button>
+        )}
+      </div>
+      <div className="px-3 py-2.5">
+        {!text && !busy && !error && (
+          <div className="text-center py-2">
+            <p className="text-[11px] text-[#7a6a92] mb-2 leading-relaxed">
+              上面是规则引擎按教材条文的逐项判定。点击下方按钮，Kimi K3 会把整盘卦串起来，
+              用大白话讲：所问之事结果如何、什么时候应验、该怎么决策、如何趋避化解。
+            </p>
+            <button onClick={run}
+              className="inline-flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-lg bg-[#7c5cd6] text-white hover:bg-[#6a4cc0] shadow">
+              <Sparkles size={15} /> 生成 AI 完整断卦
+            </button>
+          </div>
+        )}
+        {busy && !text && <p className="text-xs text-[#7a6a92] py-2">助教正在通盘推演，先思考再作答，约需十几秒…</p>}
+        {text && (
+          <div className="text-xs leading-relaxed text-[#3d3352] whitespace-pre-wrap">
+            {text}
+            {busy && <span className="inline-block w-1.5 h-3.5 bg-[#7c5cd6] animate-pulse ml-0.5 align-middle" />}
+          </div>
+        )}
+        {error && <div className="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded px-2 py-1.5 whitespace-pre-wrap">{error}</div>}
+      </div>
     </div>
   );
 }
