@@ -12,15 +12,23 @@ import { TutorPanel } from './components/liuyao/TutorChat';
 import { buildGuaContext, buildSystemPrompt } from './lib/liuyao/tutorContext';
 import { GraduationCap, X } from 'lucide-react';
 
-function nowLocal(): string {
+function todayLocal(): string {
   const d = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+// 当前小时 → 时辰序号（子=0…亥=11，与 InputPanel.SHICHEN 一致）
+function currentShichen(): number {
+  const h = new Date().getHours();
+  return h === 23 ? 0 : Math.floor((h + 1) / 2) % 12;
 }
 
 export default function App() {
   const [yaos, setYaosRaw] = useState<YaoValue[]>([9, 8, 8, 9, 7, 6]); // 默认：卷三例卦 泽雷随之风地观
-  const [datetime, setDatetime] = useState(nowLocal());
+  const [date, setDate] = useState(todayLocal());
+  const [shichen, setShichen] = useState(currentShichen());
+  const [question, setQuestion] = useState('');
   const [category, setCategory] = useState('caiyun');
   const [activeExample, setActiveExample] = useState('sui_zhiguan');
   const [tutorOpen, setTutorOpen] = useState(false);
@@ -38,9 +46,11 @@ export default function App() {
 
   const result = useMemo(() => {
     try {
-      const date = new Date(datetime);
-      if (isNaN(date.getTime())) return null;
-      const gz = computeGanZhi(date);
+      // 时辰 → 代表小时：子=0、丑=2 … 亥=22（分钟不影响四柱）
+      const hour = shichen === 0 ? 0 : shichen * 2;
+      const d = new Date(`${date}T${String(hour).padStart(2, '0')}:00:00`);
+      if (isNaN(d.getTime())) return null;
+      const gz = computeGanZhi(d);
       const p = paipan(yaos, gz);
       const it = interpret(p, category);
       return { p, it };
@@ -48,7 +58,7 @@ export default function App() {
       console.error(e);
       return null;
     }
-  }, [yaos, datetime, category]);
+  }, [yaos, date, shichen, category]);
 
   const yaoNames = yaos.map((v) => {
     const m = { 7: '单（一背二字）少阳', 8: '拆（两背一字）少阴', 9: '重（三背）老阳·动', 6: '交（三字）老阴·动' } as const;
@@ -81,7 +91,9 @@ export default function App() {
           <h2 className="text-sm font-bold mb-3" style={{ fontFamily: '"Songti SC",serif' }}>一、起卦输入</h2>
           <InputPanel
             yaos={yaos} setYaos={setYaos}
-            datetime={datetime} setDatetime={setDatetime}
+            date={date} setDate={setDate}
+            shichen={shichen} setShichen={setShichen}
+            question={question} setQuestion={setQuestion}
             category={category} setCategory={setCategory}
             onLoadExample={loadExample} activeExample={activeExample}
           />
@@ -101,13 +113,19 @@ export default function App() {
                     {result.p.ganzhi.year}年 {result.p.ganzhi.month}月 {result.p.ganzhi.day}日 {result.p.ganzhi.hour}时 · {result.p.kong.join('')}空
                   </div>
                 </div>
+                {question.trim() && (
+                  <div className="mb-3 text-xs text-[#6b5f4a] bg-[#fbf5e8] border border-[#e8ddc0] rounded px-3 py-1.5">
+                    <b>所问：</b>{question.trim()}
+                    <span className="text-[#9a8a68]">　·　类别：{result.it.category.label}（用神 {result.it.category.yongshen}爻）</span>
+                  </div>
+                )}
                 <PaiPanBoard p={result.p} />
               </section>
 
               <section>
                 <h2 className="text-sm font-bold mb-1" style={{ fontFamily: '"Songti SC",serif' }}>三、九步研习工作流</h2>
                 <p className="text-[10px] text-[#9a8f78] mb-3">每步三块内容：「这一步怎么推/想」绿色教学框 · 「规则·歌诀」黄色原文框 · 「依据」课程出处</p>
-                <WorkflowSteps p={result.p} it={result.it} yaoNames={yaoNames} />
+                <WorkflowSteps p={result.p} it={result.it} yaoNames={yaoNames} question={question} />
               </section>
 
               <section>
@@ -124,7 +142,7 @@ export default function App() {
                   </div>
                   <TutorPanel
                     systemPrompt={buildSystemPrompt()}
-                    guaContext={buildGuaContext(result.p, result.it)}
+                    guaContext={buildGuaContext(result.p, result.it, question)}
                     placeholder="就当前卦局或课程知识自由提问…"
                     height="h-80"
                   />

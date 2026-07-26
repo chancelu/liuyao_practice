@@ -102,7 +102,7 @@ const VERDICT_CLS: Record<string, string> = {
 const POS_N = ['', '初', '二', '三', '四', '五', '上'];
 const REL_TEXT: Record<string, string> = { same: '比和（同我）', sheng: '我生', shengBy: '生我', ke: '我克', keBy: '克我' };
 
-export function WorkflowSteps({ p, it, yaoNames }: { p: PaiPan; it: Interpretation; yaoNames: string[] }) {
+export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: Interpretation; yaoNames: string[]; question?: string }) {
   const [openSteps, setOpenSteps] = useState<number[]>([1, 3, 7, 9]);
   const toggle = (n: number) => setOpenSteps((s) => (s.includes(n) ? s.filter((x) => x !== n) : [...s, n]));
   const isOpen = (n: number) => openSteps.includes(n);
@@ -110,7 +110,7 @@ export function WorkflowSteps({ p, it, yaoNames }: { p: PaiPan; it: Interpretati
   const movingLines = p.lines.filter((l) => l.moving);
   const walk = palaceWalk(p.palace, p.benGua.key);
   const mElem = BRANCH_ELEMENT[g.monthBranch];
-  const guaCtx = buildGuaContext(p, it);
+  const guaCtx = buildGuaContext(p, it, question);
   const askFor = (n: number) => <StepAsk stepNo={n} stepTitle={STEPS[n - 1].title} systemPrompt={buildSystemPrompt(n)} guaContext={guaCtx} />;
 
   return (

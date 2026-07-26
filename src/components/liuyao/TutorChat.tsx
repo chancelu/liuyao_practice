@@ -64,6 +64,66 @@ export async function askTutor(
   return full;
 }
 
+/** 用 Kimi K3 把具体问题归类为测事类别（定用神）。返回 { categoryId, reason } */
+export async function classifyQuestion(
+  question: string,
+  categories: { id: string; label: string; yongshen: string }[],
+): Promise<{ categoryId: string; reason: string }> {
+  const apiKey = getTutorKey();
+  if (!apiKey) throw new Error('请先在助教面板或下方填入 Kimi API Key，AI 定用神需要它');
+  const list = categories.map((c) => `${c.id}｜${c.label}｜用神取${c.yongshen}爻`).join('\n');
+  const prompt = [
+    '你是六爻「定用神」助教，教材为《云笈书院六爻卷》卷四（用神卷）。',
+    '学员问了一件具体的事，请判断它属于下列哪个测事类别，并说明取用神的理由（注明卷四依据，80字内）。',
+    '注意：同一个问题表面用词与真实所测可能不同，要抓住「最终想知道什么」来取用（如问面试能否通过，实际测录取文书，取父母爻）。',
+    '',
+    '类别列表（id｜名称｜用神）：',
+    list,
+    '',
+    `学员的问题：「${question}」`,
+    '',
+    '严格只输出一行 JSON，不要输出任何其他文字、不要用代码块：',
+    '{"category":"<类别id>","reason":"<取用理由>"}',
+  ].join('\n');
+
+  const res = await fetch('/api/tutor', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-kimi-key': apiKey },
+    body: JSON.stringify({ model: 'k3-256k', messages: [{ role: 'user', content: prompt }] }),
+  });
+  if (!res.ok || !res.body) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(errText || `请求失败（${res.status}）`);
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+  let full = '';
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const parts = buf.split('\n');
+    buf = parts.pop() ?? '';
+    for (const line of parts) {
+      const t = line.trim();
+      if (!t.startsWith('data:')) continue;
+      const data = t.slice(5).trim();
+      if (data === '[DONE]') continue;
+      try {
+        const json = JSON.parse(data);
+        full += json.choices?.[0]?.delta?.content ?? '';
+      } catch { /* 忽略半行 */ }
+    }
+  }
+  const m = full.match(/\{[\s\S]*\}/);
+  if (!m) throw new Error(`助教未返回有效归类：${full.slice(0, 120)}`);
+  const parsed = JSON.parse(m[0]) as { category?: string; reason?: string };
+  const hit = categories.find((c) => c.id === parsed.category);
+  if (!hit) throw new Error(`助教返回了未知类别「${parsed.category}」，请手动选择`);
+  return { categoryId: hit.id, reason: parsed.reason ?? '' };
+}
+
 /** 单个提问面板（每步内嵌 / 全局共用） */
 export function TutorPanel({
   systemPrompt, guaContext, placeholder, height = 'max-h-72',

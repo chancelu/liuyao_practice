@@ -4,10 +4,11 @@ import type { Interpretation } from './interpret';
 
 const POS_N = ['', '初', '二', '三', '四', '五', '上'];
 
-export function buildGuaContext(p: PaiPan, it: Interpretation): string {
+export function buildGuaContext(p: PaiPan, it: Interpretation, question?: string): string {
   const g = p.ganzhi;
   const lines: string[] = [];
   lines.push(`【当前卦局】`);
+  if (question?.trim()) lines.push(`所问何事：「${question.trim()}」`);
   lines.push(`起卦时间四柱：${g.year}年 ${g.month}月 ${g.day}日 ${g.hour}时（${g.jieqi}节后，月建${g.monthBranch}，日辰${g.dayBranch}，日干${g.dayStem}，旬空${p.kong.join('')}）`);
   lines.push(`本卦：${p.benGua.info.name}（${p.benGua.upper}上${p.benGua.lower}下）${p.bianGua ? `；变卦：${p.bianGua.info.name}` : '；六爻安静无变卦'}；互卦：${p.huGua?.name ?? '无'}`);
   lines.push(`卦宫：${p.palace}宫（五行属${p.palaceElement}），第${p.seq}卦；世在${POS_N[p.shiPos]}爻，应在${POS_N[p.yingPos]}爻，卦身${p.guaShenBranch}`);
