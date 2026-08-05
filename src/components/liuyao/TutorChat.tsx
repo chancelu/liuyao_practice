@@ -67,14 +67,15 @@ export async function askTutor(
   onDelta: (text: string) => void,
 ): Promise<string> {
   const apiKey = getTutorKey();
-  if (!apiKey) throw new Error('请先在上方填入你的 Kimi API Key（只存在本机浏览器里，随用随填）');
   const messages: ChatMsg[] = [
     { role: 'system', content: systemPrompt + '\n\n以下是当前卦局数据：\n' + guaContext },
     ...history,
   ];
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (apiKey) headers['x-kimi-key'] = apiKey; // 不填则由服务器环境变量 KIMI_API_KEY 兜底
   const res = await fetch('/api/tutor', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-kimi-key': apiKey },
+    headers,
     body: JSON.stringify({ model: 'k3-256k', messages }),
   });
   if (!res.ok || !res.body) {
@@ -112,7 +113,6 @@ export async function classifyQuestion(
   categories: { id: string; label: string; yongshen: string }[],
 ): Promise<{ categoryId: string; reason: string }> {
   const apiKey = getTutorKey();
-  if (!apiKey) throw new Error('请先在助教面板或下方填入 Kimi API Key，AI 定用神需要它');
   const list = categories.map((c) => `${c.id}｜${c.label}｜用神取${c.yongshen}爻`).join('\n');
   const prompt = [
     '你是六爻「定用神」助教，教材为《云笈书院六爻卷》卷四（用神卷）。',
@@ -128,9 +128,11 @@ export async function classifyQuestion(
     '{"category":"<类别id>","reason":"<取用理由>"}',
   ].join('\n');
 
+  const classifyHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (apiKey) classifyHeaders['x-kimi-key'] = apiKey;
   const res = await fetch('/api/tutor', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-kimi-key': apiKey },
+    headers: classifyHeaders,
     body: JSON.stringify({ model: 'k3-256k', messages: [{ role: 'user', content: prompt }] }),
   });
   if (!res.ok || !res.body) {
@@ -274,7 +276,7 @@ export function TutorPanel({
             </button>
           </div>
           <p className="mt-1 text-[10px] text-[#8a97a8] leading-snug">
-            Key 只保存在你本机浏览器的 localStorage，随请求头发给本地代理，不会写入任何文件或代码仓库。到 kimi.com 控制台可获取。
+            Key 只保存在你本机浏览器的 localStorage，随请求头发给服务器代理，不会写入任何文件或代码仓库（到 kimi.com 控制台获取）。若站长已在服务器配置 KIMI_API_KEY，则无需填写，直接提问即可。
           </p>
         </div>
       )}
