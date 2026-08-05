@@ -128,3 +128,25 @@ export function jiaziOf(index: number): string {
   const i = ((index % 60) + 60) % 60;
   return STEMS[i % 10] + BRANCHES[i % 12];
 }
+
+/** 求某日期前后最近的两个「节」（八字排大运起运数用，近似公式误差±1天） */
+export function nearbyJie(y: number, m: number, d: number): {
+  prev: { name: string; date: string }; next: { name: string; date: string };
+} {
+  const all: { name: string; t: number; date: string }[] = [];
+  for (let year = y - 1; year <= y + 1; year++) {
+    for (const jie of JIE) {
+      const jd = jieDay(year, jie);
+      all.push({
+        name: jie.name,
+        t: year * 10000 + jie.month * 100 + jd,
+        date: `${year}-${String(jie.month).padStart(2, '0')}-${String(jd).padStart(2, '0')}`,
+      });
+    }
+  }
+  all.sort((a, b) => a.t - b.t);
+  const cur = y * 10000 + m * 100 + d;
+  const prev = [...all].reverse().find((j) => j.t <= cur) ?? all[0];
+  const next = all.find((j) => j.t > cur) ?? all[all.length - 1];
+  return { prev, next };
+}

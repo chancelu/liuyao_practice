@@ -299,8 +299,15 @@ export function StepAsk({ stepTitle, systemPrompt, guaContext }: {
   );
 }
 
-/** AI 综合断卦：完整分析 + 应期 + 决策 + 化解（流式，面向小白） */
-export function AiVerdict({ systemPrompt, guaContext }: { systemPrompt: string; guaContext: string }) {
+/** AI 综合断卦/解读：完整分析（流式，面向小白）。文案可通过 props 覆盖以复用于八字 */
+export function AiVerdict({ systemPrompt, guaContext, title, intro, buttonText, askText }: {
+  systemPrompt: string;
+  guaContext: string;
+  title?: string;
+  intro?: string;
+  buttonText?: string;
+  askText?: string;
+}) {
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -325,7 +332,7 @@ export function AiVerdict({ systemPrompt, guaContext }: { systemPrompt: string; 
       const ans = await askTutor(
         systemPrompt,
         guaContext,
-        [{ role: 'user', content: '请基于以上卦局数据，对我所问之事做完整综合断卦。' }],
+        [{ role: 'user', content: askText ?? '请基于以上卦局数据，对我所问之事做完整综合断卦。' }],
         (partial) => setText(partial),
       );
       setText(ans || '（助教未返回内容）');
@@ -340,7 +347,7 @@ export function AiVerdict({ systemPrompt, guaContext }: { systemPrompt: string; 
     <div className="mb-3 rounded-lg border-2 border-[#7c5cd6] bg-gradient-to-br from-[#f7f3ff] to-[#fdfbf7] overflow-hidden">
       <div className="flex items-center justify-between px-3 py-2 bg-[#7c5cd6] text-white">
         <span className="text-xs font-bold flex items-center gap-1.5">
-          <Sparkles size={13} /> AI 完整断卦 · Kimi K3（结论 / 应期 / 决策 / 化解）
+          <Sparkles size={13} /> {title ?? 'AI 完整断卦 · Kimi K3（结论 / 应期 / 决策 / 化解）'}
         </span>
         {text && !busy && (
           <button onClick={run} className="flex items-center gap-1 text-[11px] bg-white/15 hover:bg-white/25 rounded px-2 py-0.5">
@@ -352,12 +359,11 @@ export function AiVerdict({ systemPrompt, guaContext }: { systemPrompt: string; 
         {!text && !busy && !error && (
           <div className="text-center py-2">
             <p className="text-[11px] text-[#7a6a92] mb-2 leading-relaxed">
-              上面是规则引擎按教材条文的逐项判定。点击下方按钮，Kimi K3 会把整盘卦串起来，
-              用大白话讲：所问之事结果如何、什么时候应验、该怎么决策、如何趋避化解。
+              {intro ?? '上面是规则引擎按教材条文的逐项判定。点击下方按钮，Kimi K3 会把整盘卦串起来，用大白话讲：所问之事结果如何、什么时候应验、该怎么决策、如何趋避化解。'}
             </p>
             <button onClick={run}
               className="inline-flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-lg bg-[#7c5cd6] text-white hover:bg-[#6a4cc0] shadow">
-              <Sparkles size={15} /> 生成 AI 完整断卦
+              <Sparkles size={15} /> {buttonText ?? '生成 AI 完整断卦'}
             </button>
           </div>
         )}
