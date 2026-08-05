@@ -21,6 +21,12 @@ export function buildBaziContext(c: BaZiChart, focus?: string): string {
   if (focus?.trim()) lines.push(`想了解的方面：「${focus.trim()}」`);
   lines.push(`${c.genderLabel}（${c.gender === 'male' ? '男' : '女'}命）：${g.year}年 ${g.month}月 ${g.day}日 ${g.hour}时（${g.jieqi}节后，日柱旬空${c.kong.join('')}，胎元${c.taiyuan}）`);
   lines.push(`日主：${c.dayMaster}${c.dayMasterElement}，生于${g.monthBranch}月（${c.deLing ? '得令' : '失令'}），旺衰三因子合计 ${c.strength.total}/100，判为「${c.strength.label}」`);
+  lines.push(`格局：${c.geju.name}${c.geju.touGan ? `（月令人元${c.geju.touGan}透干而取）` : '（月令人元不透，以主气立格）'}；取格推演：${c.geju.steps.join('；')}`);
+  if (c.relations.length) {
+    lines.push(`干支合冲刑害：${c.relations.map((r) => `${r.pair} ${r.kind}`).join('；')}`);
+  } else {
+    lines.push('干支合冲刑害：四柱无合冲刑害（静局）');
+  }
   lines.push(`旺衰明细：得令 ${c.strength.deling.score}/40（${c.strength.deling.verdict}）；得地 ${c.strength.dedi.score}/30（${c.strength.dedi.verdict}）；得势 ${c.strength.deshi.score}/30（${c.strength.deshi.verdict}）`);
   for (const p of c.pillars) {
     lines.push(
@@ -65,7 +71,7 @@ export function buildBaziReadingPrompt(): string {
     '严格按以下分节输出，每节以【标题】开头单独成行：',
     '【命盘总览】一两句话概括此命的整体气象（日主、月令、五行偏向、身强身弱）；',
     '【五行旺衰与性格】从五行力量与十神组合讲性格特质与天赋倾向（如《滴天髓》论性情、《渊海子平》论十神心性），引用具体干支十神；',
-    '【格局与用神】判断取格思路（《子平真诠》月令取格）、调候需要（《穷通宝鉴》）、病药所在（《神峰通考》），给出喜用与忌讳的五行；',
+    '【格局与用神】结合给出的取格推演点评格局成败（《子平真诠》月令取格、成格败格）、调候需要（《穷通宝鉴》）、病药所在（《神峰通考》），并分析干支合冲刑害对格局与用神的影响（用神逢冲则力减、忌神受制反为福），给出喜用与忌讳的五行；',
     '【逐项分析】针对学员想了解的方面（若无则说明事业、财运、感情、健康大意），结合十神与柱位（年月日时分主祖辈/父母青年/自身夫妻/子女晚年）分析；',
     '【大运走势】结合大运序列，指出哪几步运较顺、哪几步宜守（注明起止年龄），说明判断逻辑；',
     '【建议与趋避】从五行喜用角度给具体建议：适合的行业方向、方位、颜色、人际合作属相等；',

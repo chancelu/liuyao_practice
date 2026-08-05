@@ -157,6 +157,7 @@ export function BaziApp() {
             <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
               <h2 className="text-sm font-bold" style={{ fontFamily: '"Songti SC",serif' }}>
                 二、命盘 · {chart.genderLabel} · 日主 {chart.dayMaster}{chart.dayMasterElement}（{chart.strength.label}）
+                <span className="ml-2 text-xs font-bold bg-[#7a5c2e] text-white rounded px-1.5 py-0.5 align-middle">{chart.geju.name}</span>
               </h2>
               <div className="text-xs text-[#8a7f6a]">胎元{chart.taiyuan} · {chart.kong.join('')}空 · 大运{chart.dayunDir} · 约 {chart.qiyunAge} 岁起运</div>
             </div>
@@ -231,6 +232,37 @@ export function BaziApp() {
             <p className="mt-2 text-[10px] text-[#9a8f78] leading-snug">
               神煞图例：<span className="text-emerald-700">绿＝吉神</span>（天乙/太极/天德/月德贵人、文昌、禄神、金舆、天医、十灵日）　<span className="text-pink-700">粉＝姻缘</span>（桃花、红艳、红鸾、天喜）　<span className="text-red-700">红＝凶煞</span>（羊刃、劫煞、亡神、孤辰、寡宿、阴阳差错）　紫＝魁罡　灰＝中性（驿马、华盖、将星）。查法以《三命通会》为准，神煞只作辅助参考，不可喧宾夺主盖过五行生克。
             </p>
+            {/* 格局 + 刑冲合害 */}
+            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* 格局卡 */}
+              <div className="border border-[#e8dfc8] rounded-lg bg-[#fdfaf3] px-3 py-2.5">
+                <div className="text-xs font-bold text-[#6b5f4a] mb-1.5">
+                  月令取格：<span className="text-sm text-[#7a5c2e]" style={{ fontFamily: '"Songti SC",serif' }}>{chart.geju.name}</span>
+                  {chart.geju.touGan && <span className="ml-1 font-normal text-[#9a8f78]">（{chart.geju.touGan}透干）</span>}
+                </div>
+                <ul className="space-y-1">
+                  {chart.geju.steps.map((s, i) => <li key={i} className="text-[11px] text-[#7a6a48] leading-snug">· {s}</li>)}
+                </ul>
+                {chart.geju.note && <p className="mt-1.5 text-[11px] text-[#8a6a4a] leading-snug border-t border-[#efe8d5] pt-1.5"><b>喜忌：</b>{chart.geju.note}</p>}
+              </div>
+              {/* 刑冲合害卡 */}
+              <div className="border border-[#e8dfc8] rounded-lg bg-[#fdfaf3] px-3 py-2.5">
+                <div className="text-xs font-bold text-[#6b5f4a] mb-1.5">干支关系 · 合冲刑害</div>
+                {chart.relations.length ? (
+                  <div className="space-y-1.5">
+                    {chart.relations.map((r, i) => (
+                      <div key={i} className="text-[11px] leading-snug">
+                        <span className={`inline-block rounded px-1 mr-1 font-bold ${r.tone === 'good' ? 'bg-emerald-100 text-emerald-800' : r.tone === 'bad' ? 'bg-red-100 text-red-700' : 'bg-[#eef0e5] text-[#6b6152]'}`}>{r.kind}</span>
+                        <span className="font-bold text-[#3d3428]">{r.pair}</span>
+                        <span className="block text-[#7a6a48] mt-0.5">{r.detail}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-[#9a8f78] leading-snug">四柱干支无合冲刑害，是为「静局」——命局安定少波澜，吉凶多待岁运引动。</p>
+                )}
+              </div>
+            </div>
             {/* 五行力量条 */}
             <div className="mt-3 space-y-1">
               {ELEMENTS.map((e) => (
@@ -320,9 +352,12 @@ export function BaziApp() {
             <StepCard step={STEPS[3]} open={isOpen(4)} onToggle={() => toggle(4)} ask={askFor(4)}>
               <Teach title="用神有哪几种取法？">
                 <p>① <b>旺衰派</b>（《滴天髓》）：强者抑之、弱者扶之。本盘「{chart.strength.label}」，喜 <b>{xiYong.join('、')}</b> 之五行（{xiYongLabel}）。</p>
-                <p>② <b>格局派</b>（《子平真诠》）：以月令透干取格（正官格、财格、食神格……），成格需相神辅佐，败格需救应。</p>
+                <p>② <b>格局派</b>（《子平真诠》）：以月令透干取格——本盘为「<b>{chart.geju.name}</b>」{chart.geju.touGan ? `（${chart.geju.touGan}透干而取）` : '（月令人元不透，以主气立格）'}。{chart.geju.note}</p>
                 <p>③ <b>调候派</b>（《穷通宝鉴》）：先看寒暖燥湿——夏生需水润、冬生需火暖，调候为先，不论格局旺衰。</p>
                 <p>④ <b>病药说</b>（《神峰通考》）：「有病方为贵」——找出命局之「病」（过旺或过弱之神），以能治病的五行为「药」。</p>
+                {chart.relations.length > 0 && (
+                  <p>⑤ <b>别忘了看关系</b>：本盘有{[...new Set(chart.relations.map((r) => r.kind))].join('、')}——用神/格局之支若逢冲破（如{chart.relations.find((r) => r.tone === 'bad')?.pair ?? ''}），则力量打折甚至破局，取用时须一并考量（《三命通会》）。</p>
+                )}
                 <p className="text-[#8a6a4a]">四派各有侧重，实战常互相参看。可用下方「问助教」让 AI 结合本盘具体分析喜用。</p>
               </Teach>
               <Basis text="《子平真诠·论用神》：「八字用神，专求月令」；《穷通宝鉴》十天干逐月调候宜忌；《神峰通考·病药说》。" />

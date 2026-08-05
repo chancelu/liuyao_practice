@@ -147,6 +147,168 @@ function shenshaOfPillar(stem: string, branch: string, isDayPillar: boolean, c: 
   return out;
 }
 
+// ============ 月令取格（《子平真诠》） ============
+export interface GejuResult {
+  name: string;      // 正官格 / 七杀格 / 建禄格……
+  touGan: string;    // 透出之干（无则空串）
+  steps: string[];   // 取格推演过程
+  note: string;      // 成格喜忌一句话
+}
+
+/** 八正格喜忌口诀（教学一句话版，据《子平真诠》各格论） */
+const GEJU_NOTES: Record<string, string> = {
+  正官格: '喜财星生官、印星护官；忌伤官见官、七杀混杂（官杀混杂须去留）。',
+  七杀格: '喜食神制杀、印绶化杀；忌财星生杀、身弱无制——杀无制则为祸。',
+  正财格: '喜身旺任财、食伤生财；忌比劫争财、财多身弱（富屋贫人）。',
+  偏财格: '喜身旺有官星护财；忌比劫分夺。偏财为众人之财，最忌分夺。',
+  正印格: '喜官星相生、身旺任印；忌财星坏印（贪财坏印，因财失义）。',
+  偏印格: '喜偏财制枭、身旺；忌枭印夺食（见食神则为倒食，主福气受损）。',
+  食神格: '喜身旺、食神生财；忌枭印夺食。食神为寿星福星，最宜无伤。',
+  伤官格: '喜伤官生财、伤官配印；忌伤官见官（唯金水伤官喜见官，须辨寒暖）。',
+  建禄格: '月建为禄，不取比劫为格——须别取财官食伤为用，身旺无依则劳碌。',
+  阳刃格: '刃为至刚之物，喜官杀制刃成权；忌刑冲合害动刃、财运惹刃之祸。',
+};
+
+/** 月令取格：月令人元透干者取格；不透则以主气立格；月建比劫则为建禄/阳刃（《子平真诠·论用神》） */
+export function analyzeGeju(dayMaster: string, pillars: PillarInfo[]): GejuResult {
+  const monthPillar = pillars[1];
+  const mb = monthPillar.branch;
+  const hidden = CANGGAN[mb]; // [主气, 中气, 余气]
+  const outerStems = pillars.filter((p) => p.name !== '日柱').map((p) => ({ name: p.name.slice(0, 1), stem: p.stem }));
+  const steps: string[] = [];
+  steps.push(`《子平真诠》：「八字用神，专求月令」——先看月支 ${mb} 的藏干（人元）：${hidden.map((s, i) => `${s}${STEM_ELEMENT[s]}（${['主气', '中气', '余气'][i]}，十神${shiShen(dayMaster, s)}）`).join('、')}`);
+
+  const mainSS = shiShen(dayMaster, hidden[0]);
+  // 月建比劫不取为格：建禄 / 阳刃
+  if (mainSS === '比肩' || mainSS === '劫财') {
+    const isLu = mainSS === '比肩';
+    steps.push(`月支主气 ${hidden[0]} 是日主的${mainSS}——月令为日主之${isLu ? '禄地（临官）' : '刃地（劫财旺乡）'}，比劫不立为正格，名为「${isLu ? '建禄' : '阳刃'}格」，用神须别取财官食伤。`);
+    return { name: isLu ? '建禄格' : '阳刃格', touGan: '', steps, note: GEJU_NOTES[isLu ? '建禄格' : '阳刃格'] };
+  }
+
+  // 依次看主气→中气→余气是否透出年月时干
+  for (let i = 0; i < hidden.length; i++) {
+    const hs = hidden[i];
+    const ss = shiShen(dayMaster, hs);
+    const hit = outerStems.find((o) => o.stem === hs);
+    const qiName = ['主气', '中气', '余气'][i];
+    if (hit) {
+      steps.push(`${qiName} ${hs} 透出${hit.name}柱天干——透干则清而有力，即以「${ss}」立格。`);
+      return { name: `${ss}格`, touGan: hs, steps, note: GEJU_NOTES[`${ss}格`] ?? '' };
+    }
+    steps.push(`${qiName} ${hs}（${ss}）未透出天干${i < hidden.length - 1 ? '，再看下一层人元' : ''}。`);
+  }
+  steps.push(`三任人元皆不透，以月支主气 ${hidden[0]} 立格——虽不透干，月令之气仍是一局之纲。`);
+  return { name: `${mainSS}格`, touGan: '', steps, note: GEJU_NOTES[`${mainSS}格`] ?? '' };
+}
+
+// ============ 刑冲合害（地支关系） ============
+export interface RelationItem {
+  kind: string;   // 六冲 / 六合 / 三合局 / 三会方 / 相刑 / 自刑 / 六害 / 相破 / 天干五合
+  pair: string;   // 「月支子 × 日支午」
+  detail: string; // 教学解释
+  tone: 'good' | 'bad' | 'neutral';
+}
+
+const LIU_CHONG: Record<string, string> = { 子: '午', 午: '子', 丑: '未', 未: '丑', 寅: '申', 申: '寅', 卯: '酉', 酉: '卯', 辰: '戌', 戌: '辰', 巳: '亥', 亥: '巳' };
+const LIU_HE: Record<string, [string, string]> = { // 六合 → [对方, 合化五行]
+  子: ['丑', '土'], 丑: ['子', '土'], 寅: ['亥', '木'], 亥: ['寅', '木'], 卯: ['戌', '火'], 戌: ['卯', '火'],
+  辰: ['酉', '金'], 酉: ['辰', '金'], 巳: ['申', '水'], 申: ['巳', '水'], 午: ['未', '土'], 未: ['午', '土'],
+};
+const LIU_HAI: Record<string, string> = { 子: '未', 未: '子', 丑: '午', 午: '丑', 寅: '巳', 巳: '寅', 卯: '辰', 辰: '卯', 申: '亥', 亥: '申', 酉: '戌', 戌: '酉' };
+const LIU_PO: Record<string, string> = { 子: '酉', 酉: '子', 丑: '辰', 辰: '丑', 寅: '亥', 亥: '寅', 卯: '午', 午: '卯', 巳: '申', 申: '巳', 未: '戌', 戌: '未' };
+const XING_PAIR: Record<string, [string, string]> = { // 相刑 → [对方, 刑名]
+  寅: ['巳', '恃势之刑'], 巳: ['申', '恃势之刑'], 申: ['寅', '恃势之刑'],
+  丑: ['戌', '无恩之刑'], 戌: ['未', '无恩之刑'], 未: ['丑', '无恩之刑'],
+  子: ['卯', '无礼之刑'], 卯: ['子', '无礼之刑'],
+};
+const ZI_XING = ['辰', '午', '酉', '亥'];
+const TIAN_GAN_HE: Record<string, [string, string]> = { 甲: ['己', '土'], 己: ['甲', '土'], 乙: ['庚', '金'], 庚: ['乙', '金'], 丙: ['辛', '水'], 辛: ['丙', '水'], 丁: ['壬', '木'], 壬: ['丁', '木'], 戊: ['癸', '火'], 癸: ['戊', '火'] };
+const SANHE_JU: [string[], string][] = [[['申', '子', '辰'], '水'], [['寅', '午', '戌'], '火'], [['巳', '酉', '丑'], '金'], [['亥', '卯', '未'], '木']];
+const SANHUI_FANG: [string[], string][] = [[['寅', '卯', '辰'], '木（东方）'], [['巳', '午', '未'], '火（南方）'], [['申', '酉', '戌'], '金（西方）'], [['亥', '子', '丑'], '水（北方）']];
+
+/** 柱位组合的人事含义（教学简版） */
+const POSITION_MEANING: Record<string, string> = {
+  年月: '早年、祖辈与父母宫', 月日: '父母与夫妻宫（门户之内）', 日时: '夫妻与子女宫（中晚年）',
+  年日: '祖辈与自身', 月时: '父母与子女宫', 年时: '早年与晚景（隔位遥应，力减）',
+};
+
+/** 分析四柱干支间的合冲刑害（《三命通会》《渊海子平》） */
+export function analyzeRelations(pillars: PillarInfo[]): RelationItem[] {
+  const items: RelationItem[] = [];
+  const bs = pillars.map((p) => ({ pos: p.name.slice(0, 1), branch: p.branch }));
+  const ss = pillars.map((p) => ({ pos: p.name.slice(0, 1), stem: p.stem }));
+  const branchOf = (b: string) => bs.filter((x) => x.branch === b);
+
+  // —— 天干五合 ——
+  for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) {
+    const [other, elem] = TIAN_GAN_HE[ss[i].stem] ?? [];
+    if (other === ss[j].stem) {
+      items.push({
+        kind: '天干五合', pair: `${ss[i].pos}干${ss[i].stem} × ${ss[j].pos}干${ss[j].stem}`, tone: 'good',
+        detail: `${ss[i].stem}${ss[j].stem}合化${elem}。天干之合主情投意合、相互牵绊；合而化与不化须看月令是否扶助化神（《渊海子平》）。`,
+      });
+    }
+  }
+
+  // —— 地支两两关系 ——
+  for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) {
+    const a = bs[i], b = bs[j];
+    const pairLabel = `${a.pos}支${a.branch} × ${b.pos}支${b.branch}`;
+    const posKey = [a.pos, b.pos].sort().join('');
+    const where = POSITION_MEANING[posKey] ?? '';
+    if (LIU_CHONG[a.branch] === b.branch) {
+      items.push({ kind: '六冲', pair: pairLabel, tone: 'bad', detail: `${a.branch}${b.branch}相冲，波及${where}。冲者动也、散也——主变动、冲突、分离；两旺相冲为「冲起」，弱冲旺为「冲不动」，须看双方力量（《三命通会》）。` });
+    }
+    const he = LIU_HE[a.branch];
+    if (he && he[0] === b.branch) {
+      items.push({ kind: '六合', pair: pairLabel, tone: 'good', detail: `${a.branch}${b.branch}合化${he[1]}，涉及${where}。合者亲也——主亲近、合作、牵绊；合而逢冲则先合后分。` });
+    }
+    const xing = XING_PAIR[a.branch];
+    if (xing && xing[0] === b.branch) {
+      items.push({ kind: '相刑', pair: pairLabel, tone: 'bad', detail: `${a.branch}${b.branch}相刑（${xing[1]}），涉及${where}。刑主刑伤、是非、人际失和；恃势之刑易仗势招祸，无恩之刑主恩将仇报，无礼之刑主男女失礼。` });
+    }
+    if (LIU_HAI[a.branch] === b.branch) {
+      items.push({ kind: '六害', pair: pairLabel, tone: 'bad', detail: `${a.branch}${b.branch}相害，涉及${where}。害主暗中损害、妨碍、口舌是非，力轻于冲刑，如绵里藏针。` });
+    }
+    if (LIU_PO[a.branch] === b.branch) {
+      items.push({ kind: '相破', pair: pairLabel, tone: 'neutral', detail: `${a.branch}${b.branch}相破，涉及${where}。破为六组关系中最轻者，主小有破损、美中不足；寅亥、巳申皆合中带破，主亲中有隙。` });
+    }
+  }
+
+  // —— 自刑（同支重现） ——
+  for (const zb of ZI_XING) {
+    const hits = branchOf(zb);
+    if (hits.length >= 2) {
+      items.push({ kind: '自刑', pair: hits.map((h) => `${h.pos}支${h.branch}`).join(' × '), tone: 'bad', detail: `${zb}${zb}自刑——自寻烦恼、纠结内耗，应期多在${zb}年${zb}月引动（《三命通会》辰午酉亥自刑）。` });
+    }
+  }
+
+  // —— 三合局 / 半合 ——
+  const branchList = bs.map((x) => x.branch);
+  for (const [members, elem] of SANHE_JU) {
+    const hit = members.filter((b) => branchList.includes(b));
+    if (hit.length === 3) {
+      const poses = members.map((b) => bs.find((x) => x.branch === b)!.pos).join('');
+      items.push({ kind: '三合局', pair: `${members.join('')}（${poses}三支）`, tone: 'good', detail: `${members.join('')}三合${elem}局——三支同心化${elem}，力量远大于单支，${elem === '火' ? '全局偏燥' : elem === '水' ? '全局偏寒' : `局中${elem}气独旺`}，会改变全局五行气候（《三命通会》）。` });
+    } else if (hit.length === 2) {
+      const poses = hit.map((b) => bs.find((x) => x.branch === b)!.pos).join('、');
+      items.push({ kind: '半合', pair: `${hit.join('')}（${poses}支）`, tone: 'neutral', detail: `${hit.join('')}为${members.join('')}${elem}局之半合，有化${elem}之意而力不全，待岁运补全${members.find((b) => !hit.includes(b))}则成局。` });
+    }
+  }
+
+  // —— 三会方 ——
+  for (const [members, fang] of SANHUI_FANG) {
+    if (members.every((b) => branchList.includes(b))) {
+      items.push({ kind: '三会方', pair: members.join(''), tone: 'good', detail: `${members.join('')}三会${fang}方——一方之气尽聚，力量更胜于三合，全局气候以此为纲。` });
+    }
+  }
+
+  // 排序：大局优先，冲刑次之
+  const order: Record<string, number> = { 三合局: 0, 三会方: 1, 六冲: 2, 相刑: 3, 自刑: 4, 六合: 5, 天干五合: 6, 六害: 7, 半合: 8, 相破: 9 };
+  return items.sort((x, y) => order[x.kind] - order[y.kind]);
+}
+
 // ============ 类型 ============
 export interface PillarInfo {
   name: '年柱' | '月柱' | '日柱' | '时柱';
@@ -201,6 +363,8 @@ export interface BaZiChart {
   wuxingCount: Record<Element5, number>;
   totalPower: number;
   strength: StrengthAnalysis;
+  geju: GejuResult;          // 月令取格（《子平真诠》）
+  relations: RelationItem[]; // 干支合冲刑害
   deLing: boolean;
   dayunDir: '顺行' | '逆行';
   qiyunAge: number;
@@ -344,6 +508,8 @@ export function paipanBazi(date: Date, gender: 'male' | 'female'): BaZiChart {
 
   const strength = analyzeStrength(dayMaster, dmElem, pillars, gz.monthBranch);
   const deLing = strength.deling.score >= 32; // 旺或相
+  const geju = analyzeGeju(dayMaster, pillars);
+  const relations = analyzeRelations(pillars);
 
   // 大运：阳男阴女顺行，阴男阳女逆行（《千里命稿》）
   const yearYang = isYangStem(gz.year[0]);
@@ -385,6 +551,8 @@ export function paipanBazi(date: Date, gender: 'male' | 'female'): BaZiChart {
     wuxingCount,
     totalPower,
     strength,
+    geju,
+    relations,
     deLing,
     dayunDir,
     qiyunAge,
