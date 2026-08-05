@@ -17,6 +17,48 @@ export function setTutorKey(k: string) {
   } catch { /* ignore */ }
 }
 
+// —— 轻量 Markdown 渲染（助教回复用）：**粗体**、`代码`、# 标题、【分节】、列表 ——
+function mdInline(text: string): React.ReactNode[] {
+  return text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((p, i) => {
+    if (p.startsWith('**') && p.endsWith('**') && p.length > 4) return <b key={i} className="text-[#2c3e57]">{p.slice(2, -2)}</b>;
+    if (p.startsWith('`') && p.endsWith('`') && p.length > 2) return <code key={i} className="bg-[#eef2f8] px-1 rounded text-[#4a5d7e] text-[11px]">{p.slice(1, -1)}</code>;
+    return <span key={i}>{p}</span>;
+  });
+}
+
+export function Md({ text }: { text: string }) {
+  return (
+    <div className="space-y-0.5">
+      {text.split('\n').map((raw, i) => {
+        const t = raw.trim();
+        if (!t) return <div key={i} className="h-1.5" />;
+        const h = t.match(/^(#{1,4})\s+(.*)$/);
+        if (h) return <div key={i} className="font-bold text-[#2c3e57] mt-1.5">{mdInline(h[2])}</div>;
+        if (/^【[^】]{2,12}】/.test(t)) {
+          // 【标题】单独成行，或【标题】后接正文时标题加粗
+          const m = t.match(/^【[^】]{2,12}】(.*)$/);
+          return (
+            <div key={i} className="mt-1.5">
+              <span className="font-bold text-[#4a5d7e]">{t.match(/^【[^】]{2,12}】/)![0]}</span>
+              {m?.[1] && <span>{mdInline(m[1])}</span>}
+            </div>
+          );
+        }
+        const li = t.match(/^([-*•]|\d+[.、])\s*(.*)$/);
+        if (li) {
+          return (
+            <div key={i} className="pl-3.5 relative">
+              <span className="absolute left-0 text-[#9aa7bd]">{li[1]}</span>
+              <span>{mdInline(li[2])}</span>
+            </div>
+          );
+        }
+        return <div key={i}>{mdInline(raw)}</div>;
+      })}
+    </div>
+  );
+}
+
 /** 调用助教（流式）。systemPrompt+guaContext 组成 system，history 为对话。 */
 export async function askTutor(
   systemPrompt: string,
@@ -249,10 +291,12 @@ export function TutorPanel({
           </p>
         )}
         {history.map((m, i) => (
-          <div key={i} className={`text-xs leading-relaxed rounded-lg px-3 py-2 whitespace-pre-wrap ${
-            m.role === 'user' ? 'bg-[#dce8f8] text-[#2c3e57] ml-8' : 'bg-white border border-[#dbe4ef] text-[#33404f] mr-4'
+          <div key={i} className={`text-xs leading-relaxed rounded-lg px-3 py-2 ${
+            m.role === 'user' ? 'bg-[#dce8f8] text-[#2c3e57] ml-8 whitespace-pre-wrap' : 'bg-white border border-[#dbe4ef] text-[#33404f] mr-4'
           }`}>
-            {m.content || (streaming && i === history.length - 1 ? '思考中…' : '')}
+            {m.role === 'assistant'
+              ? (m.content ? <Md text={m.content} /> : (streaming && i === history.length - 1 ? '思考中…' : ''))
+              : m.content}
           </div>
         ))}
         {error && <div className="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded px-2 py-1.5 whitespace-pre-wrap">{error}</div>}
@@ -369,8 +413,8 @@ export function AiVerdict({ systemPrompt, guaContext, title, intro, buttonText, 
         )}
         {busy && !text && <p className="text-xs text-[#7a6a92] py-2">助教正在通盘推演，先思考再作答，约需十几秒…</p>}
         {text && (
-          <div className="text-xs leading-relaxed text-[#3d3352] whitespace-pre-wrap">
-            {text}
+          <div className="text-xs leading-relaxed text-[#3d3352]">
+            <Md text={text} />
             {busy && <span className="inline-block w-1.5 h-3.5 bg-[#7c5cd6] animate-pulse ml-0.5 align-middle" />}
           </div>
         )}

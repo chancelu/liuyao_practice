@@ -103,7 +103,7 @@ export function BaziApp() {
 
   // 喜忌提示（教学简化）：身强喜克泄耗，身弱喜生扶
   const dm = chart.dayMasterElement;
-  const strong = chart.strengthLabel === '身强' || chart.strengthLabel === '中和偏强';
+  const strong = chart.strength.label === '身强' || chart.strength.label === '中和偏强';
   const shengMe = (Object.keys(SHENG) as Element5[]).find((e) => SHENG[e] === dm)!;
   const keMe = (Object.keys(KE) as Element5[]).find((e) => KE[e] === dm)!;
   const xiYong = strong ? [KE[dm], keMe, SHENG[dm]] : [shengMe, dm];
@@ -156,9 +156,9 @@ export function BaziApp() {
           <section className="bg-[#faf6ea] border border-[#d8cdb4] rounded-lg p-4">
             <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
               <h2 className="text-sm font-bold" style={{ fontFamily: '"Songti SC",serif' }}>
-                二、命盘 · {chart.genderLabel} · 日主 {chart.dayMaster}{chart.dayMasterElement}（{chart.strengthLabel}）
+                二、命盘 · {chart.genderLabel} · 日主 {chart.dayMaster}{chart.dayMasterElement}（{chart.strength.label}）
               </h2>
-              <div className="text-xs text-[#8a7f6a]">{chart.kong.join('')}空 · 大运{chart.dayunDir} · 约 {chart.qiyunAge} 岁起运</div>
+              <div className="text-xs text-[#8a7f6a]">胎元{chart.taiyuan} · {chart.kong.join('')}空 · 大运{chart.dayunDir} · 约 {chart.qiyunAge} 岁起运</div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse" style={{ fontFamily: '"Songti SC",serif' }}>
@@ -191,6 +191,26 @@ export function BaziApp() {
                     <td className="text-left py-1">藏干</td>
                     {chart.pillars.map((p) => (
                       <td key={p.name} className="py-1">{p.canggan.map((x) => `${x.stem}${x.shiShen}`).join(' ')}</td>
+                    ))}
+                  </tr>
+                  <tr className="text-xs text-[#6b5f4a]">
+                    <td className="text-left py-1">地势</td>
+                    {chart.pillars.map((p) => <td key={p.name} className="py-1">{p.dishi}</td>)}
+                  </tr>
+                  <tr className="text-xs text-[#6b5f4a]">
+                    <td className="text-left py-1">自坐</td>
+                    {chart.pillars.map((p) => <td key={p.name} className="py-1">{p.zizuo}</td>)}
+                  </tr>
+                  <tr className="text-xs text-[#6b5f4a]">
+                    <td className="text-left py-1">神煞</td>
+                    {chart.pillars.map((p) => (
+                      <td key={p.name} className="py-1">
+                        {p.shensha.length
+                          ? p.shensha.map((s) => (
+                              <span key={s} className={`inline-block rounded px-1 mr-0.5 mb-0.5 ${s.includes('贵人') || s.includes('文昌') || s.includes('禄') ? 'bg-emerald-100 text-emerald-800' : s.includes('羊刃') ? 'bg-red-100 text-red-700' : 'bg-[#eef0e5] text-[#6b6152]'}`}>{s}</span>
+                            ))
+                          : <span className="text-[#c0b89e]">—</span>}
+                      </td>
                     ))}
                   </tr>
                   <tr className="text-xs text-[#8a7f6a]">
@@ -244,19 +264,51 @@ export function BaziApp() {
               <Basis text="《渊海子平》：以日干为主，论十神六亲——正印为母、偏财为父、男命正财为妻、女命正官为夫、食伤为子女、比劫为兄弟。" />
             </StepCard>
 
-            {/* 第 3 步：五行旺衰 */}
+            {/* 第 3 步：五行旺衰（三因子详析） */}
             <StepCard step={STEPS[2]} open={isOpen(3)} onToggle={() => toggle(3)} ask={askFor(3)}>
-              <Teach title="这步怎么判？">
-                {chart.strengthNotes.map((n, i) => <p key={i}>{['①', '②', '③'][i]} {n}</p>)}
-                <p>判旺衰三字诀：<b>得令</b>（月支是否扶我，权重最大）、<b>得地</b>（地支有无根气通根）、<b>得势</b>（天干比劫印枭多寡）。本盘为教学简化计分，细论需看通根透干。</p>
+              {/* 总分仪表盘 */}
+              <div className="flex items-center gap-4 mb-3 border border-[#e8dfc8] rounded-lg bg-[#fdfaf3] px-4 py-3">
+                <div className="text-center shrink-0">
+                  <div className="text-2xl font-bold" style={{ fontFamily: '"Songti SC",serif' }}>{chart.strength.total}<span className="text-xs text-[#9a8f78]">/100</span></div>
+                  <div className={`text-xs font-bold px-2 py-0.5 rounded mt-0.5 ${strong ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>{chart.strength.label}</div>
+                </div>
+                <div className="flex-1 space-y-1.5">
+                  {([['得令（月令气候）', chart.strength.deling], ['得地（通根根气）', chart.strength.dedi], ['得势（天干帮扶）', chart.strength.deshi]] as const).map(([name, f]) => (
+                    <div key={name} className="flex items-center gap-2 text-xs">
+                      <span className="w-28 shrink-0 text-[#6b5f4a]">{name}</span>
+                      <div className="flex-1 h-2.5 bg-[#efe8d5] rounded-full overflow-hidden">
+                        <div className="h-full rounded-full bg-[#7a5c2e]" style={{ width: `${(f.score / f.max) * 100}%` }} />
+                      </div>
+                      <span className="w-12 text-right text-[#8a7f6a]">{f.score}/{f.max}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* 三因子明细 */}
+              <div className="space-y-2 mb-3">
+                {([['① 得令', chart.strength.deling], ['② 得地', chart.strength.dedi], ['③ 得势', chart.strength.deshi]] as const).map(([name, f]) => (
+                  <div key={name} className="border border-[#e8dfc8] rounded-lg bg-[#fdfaf3] px-3 py-2">
+                    <div className="text-xs font-bold text-[#6b5f4a] mb-1">{name} <span className="font-normal text-[#9a8f78]">{f.score}/{f.max} 分</span></div>
+                    <p className="text-xs text-[#3d3428] mb-1">{f.verdict}</p>
+                    <ul className="space-y-0.5">
+                      {f.items.map((it, i) => <li key={i} className="text-[11px] text-[#7a6a48] leading-snug">· {it}</li>)}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+              <Teach title="怎么理解这三项？">
+                <p><b>得令</b>权重最大（40 分）：月令是全局气候的总开关——春天木旺、夏天火旺，日主生在帮自己的季节就先天有劲。</p>
+                <p><b>得地</b>看通根（30 分）：天干为苗、地支为根，日主在地支藏干里有同类五行叫「有根」，本气根最壮、中气次之、余气最弱。无根之木，纵有印比也虚。</p>
+                <p><b>得势</b>看帮扶（30 分）：年月时三个天干里，比劫（同我）直接帮身，印枭（生我）间接助身；财、官杀、食伤都是消耗日主的。</p>
+                <p className="text-[#8a6a4a]">{chart.strength.summary}</p>
               </Teach>
-              <Basis text="《滴天髓》：「能知衰旺之真机，其于三命之奥，思过半矣」——旺衰是子平法的第一功夫；《子平真诠》：月令者，命中之枢纽。" />
+              <Basis text="《滴天髓》：「能知衰旺之真机，其于三命之奥，思过半矣」；《子平真诠》：月令者，命中之枢纽。判分模型：得令40（旺40/相32/休20/囚12/死4）、得地30（本气根12/中气8/余气4）、得势30（比劫干8/印枭干6），62 以上身强、47 以上中和偏强、33 以上中和偏弱、以下身弱。" />
             </StepCard>
 
             {/* 第 4 步：取用神 */}
             <StepCard step={STEPS[3]} open={isOpen(4)} onToggle={() => toggle(4)} ask={askFor(4)}>
               <Teach title="用神有哪几种取法？">
-                <p>① <b>旺衰派</b>（《滴天髓》）：强者抑之、弱者扶之。本盘「{chart.strengthLabel}」，喜 <b>{xiYong.join('、')}</b> 之五行（{xiYongLabel}）。</p>
+                <p>① <b>旺衰派</b>（《滴天髓》）：强者抑之、弱者扶之。本盘「{chart.strength.label}」，喜 <b>{xiYong.join('、')}</b> 之五行（{xiYongLabel}）。</p>
                 <p>② <b>格局派</b>（《子平真诠》）：以月令透干取格（正官格、财格、食神格……），成格需相神辅佐，败格需救应。</p>
                 <p>③ <b>调候派</b>（《穷通宝鉴》）：先看寒暖燥湿——夏生需水润、冬生需火暖，调候为先，不论格局旺衰。</p>
                 <p>④ <b>病药说</b>（《神峰通考》）：「有病方为贵」——找出命局之「病」（过旺或过弱之神），以能治病的五行为「药」。</p>
@@ -311,8 +363,8 @@ export function BaziApp() {
           </section>
 
           <footer className="text-[10px] text-[#9a8f78] leading-relaxed border-t border-[#d8cdb4] pt-3 pb-6">
-            说明：本模块排盘规则（立春换年、节气换月、五虎遁五鼠遁、十神、藏干、纳音、旬空、大运顺逆与起运）均出自子平法传统体系；
-            五行旺衰为教学简化计分，细论需看通根透干。八字是传统术数的趋势参考，命好不如运好，运好不如心态好，具体人生抉择以现实努力与专业意见为准。
+            说明：本模块排盘规则（立春换年、节气换月、五虎遁五鼠遁、十神、藏干、地势自坐、神煞、胎元、纳音、旬空、大运顺逆与起运）均出自子平法传统体系；
+            旺衰为得令/得地/得势三因子量化教学模型，细论还需参看合化、通关与调候。八字是传统术数的趋势参考，命好不如运好，运好不如心态好，具体人生抉择以现实努力与专业意见为准。
           </footer>
 
           {/* 全局助教 */}

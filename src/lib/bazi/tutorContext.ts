@@ -19,11 +19,12 @@ export function buildBaziContext(c: BaZiChart, focus?: string): string {
   const lines: string[] = [];
   lines.push('【当前命盘】');
   if (focus?.trim()) lines.push(`想了解的方面：「${focus.trim()}」`);
-  lines.push(`${c.genderLabel}（${c.gender === 'male' ? '男' : '女'}命）：${g.year}年 ${g.month}月 ${g.day}日 ${g.hour}时（${g.jieqi}节后，日柱旬空${c.kong.join('')}）`);
-  lines.push(`日主：${c.dayMaster}${c.dayMasterElement}，生于${g.monthBranch}月（${c.deLing ? '得令' : '失令'}），判为「${c.strengthLabel}」（扶身之力${c.selfPower}/${c.totalPower}≈${(c.selfRatio * 100).toFixed(0)}%）`);
+  lines.push(`${c.genderLabel}（${c.gender === 'male' ? '男' : '女'}命）：${g.year}年 ${g.month}月 ${g.day}日 ${g.hour}时（${g.jieqi}节后，日柱旬空${c.kong.join('')}，胎元${c.taiyuan}）`);
+  lines.push(`日主：${c.dayMaster}${c.dayMasterElement}，生于${g.monthBranch}月（${c.deLing ? '得令' : '失令'}），旺衰三因子合计 ${c.strength.total}/100，判为「${c.strength.label}」`);
+  lines.push(`旺衰明细：得令 ${c.strength.deling.score}/40（${c.strength.deling.verdict}）；得地 ${c.strength.dedi.score}/30（${c.strength.dedi.verdict}）；得势 ${c.strength.deshi.score}/30（${c.strength.deshi.verdict}）`);
   for (const p of c.pillars) {
     lines.push(
-      `  ${p.name}：${p.gz}（${p.stemElement}${p.branchElement}）天干十神「${p.shiShen}」，藏干 ${p.canggan.map((x) => `${x.stem}(${x.shiShen})`).join('、')}，纳音${p.nayin}${p.kong ? '，临空亡' : ''}`,
+      `  ${p.name}：${p.gz}（${p.stemElement}${p.branchElement}）天干十神「${p.shiShen}」，藏干 ${p.canggan.map((x) => `${x.stem}(${x.shiShen})`).join('、')}，地势${p.dishi}，自坐${p.zizuo}，纳音${p.nayin}${p.kong ? '，临空亡' : ''}${p.shensha.length ? `，神煞：${p.shensha.join('、')}` : ''}`,
     );
   }
   lines.push(`五行力量：木${c.wuxingCount.木} 火${c.wuxingCount.火} 土${c.wuxingCount.土} 金${c.wuxingCount.金} 水${c.wuxingCount.水}（教学简化计分）`);
