@@ -1,13 +1,13 @@
 import path from "path"
 import react from "@vitejs/plugin-react"
-import { defineConfig } from "vite"
+import { defineConfig, loadEnv } from "vite"
 import { inspectAttr } from 'kimi-plugin-inspect-react'
 import { Readable } from "node:stream"
 import type { Plugin } from "vite"
 
-// Kimi 助教代理：key 由使用者在界面中填入，随请求头 x-kimi-key 带来，
-// 服务器不保存、不落盘，仅转发给 Kimi API
-function kimiTutorProxy(): Plugin {
+// Kimi 助教代理（本地开发）：key 优先取请求头 x-kimi-key（界面填入），
+// 其次取环境变量 KIMI_API_KEY；服务器不保存、不落盘，仅转发给 Kimi API
+function kimiTutorProxy(envKey: string): Plugin {
   return {
     name: "kimi-tutor-proxy",
     configureServer(server) {
@@ -22,10 +22,10 @@ function kimiTutorProxy(): Plugin {
         req.on("end", async () => {
           try {
             const headerKey = req.headers["x-kimi-key"]
-            const apiKey = Array.isArray(headerKey) ? headerKey[0] : headerKey
+            const apiKey = (Array.isArray(headerKey) ? headerKey[0] : headerKey) || envKey
             if (!apiKey) {
               res.statusCode = 401
-              res.end("未提供 API Key：请先在助教面板上方填入你的 Kimi API Key")
+              res.end("未提供 API Key：请先在助教面板上方填入你的 Kimi API Key，或配置环境变量 KIMI_API_KEY")
               return
             }
             const body = JSON.parse(Buffer.concat(chunks).toString("utf-8"))
@@ -67,10 +67,11 @@ function kimiTutorProxy(): Plugin {
 }
 
 // https://vite.dev/config/
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, __dirname, "")
   return {
     base: './',
-    plugins: [inspectAttr(), react(), kimiTutorProxy()],
+    plugins: [inspectAttr(), react(), kimiTutorProxy(env.KIMI_API_KEY ?? "")],
     server: {
       port: 3000,
     },
