@@ -68,35 +68,81 @@ const TIANYI: Record<string, string[]> = { // 天乙贵人：甲戊庚牛羊…
   壬: ['卯', '巳'], 癸: ['卯', '巳'],
   辛: ['寅', '午'],
 };
+const TAIJI: Record<string, string[]> = { // 太极贵人：甲乙子午中…
+  甲: ['子', '午'], 乙: ['子', '午'],
+  丙: ['卯', '酉'], 丁: ['卯', '酉'],
+  戊: ['辰', '戌', '丑', '未'], 己: ['辰', '戌', '丑', '未'],
+  庚: ['寅', '亥'], 辛: ['寅', '亥'],
+  壬: ['巳', '申'], 癸: ['巳', '申'],
+};
 const WENCHANG: Record<string, string> = { 甲: '巳', 乙: '午', 丙: '申', 丁: '酉', 戊: '申', 己: '酉', 庚: '亥', 辛: '子', 壬: '寅', 癸: '卯' };
 const LUSHEN: Record<string, string> = { 甲: '寅', 乙: '卯', 丙: '巳', 丁: '午', 戊: '巳', 己: '午', 庚: '申', 辛: '酉', 壬: '亥', 癸: '子' };
-const YANGREN: Record<string, string> = { 甲: '卯', 丙: '午', 戊: '午', 庚: '酉', 壬: '子' }; // 阳干论刃
-// 三合局神煞：桃花/驿马/华盖/将星（按年支与日支两支查）
+const JINYU: Record<string, string> = { 甲: '辰', 乙: '巳', 丙: '未', 丁: '申', 戊: '未', 己: '申', 庚: '戌', 辛: '亥', 壬: '丑', 癸: '寅' }; // 金舆
+const HONGYAN: Record<string, string> = { 甲: '午', 乙: '申', 丙: '寅', 丁: '未', 戊: '辰', 己: '辰', 庚: '戌', 辛: '酉', 壬: '子', 癸: '申' }; // 红艳
+const YANGREN: Record<string, string> = { 甲: '卯', 丙: '午', 戊: '午', 庚: '酉', 壬: '子' }; // 羊刃（阳干论刃）
+const TIANDE: Record<string, string> = { 寅: '丁', 卯: '申', 辰: '壬', 巳: '辛', 午: '亥', 未: '甲', 申: '癸', 酉: '寅', 戌: '丙', 亥: '乙', 子: '巳', 丑: '庚' }; // 天德（按月支，干或支）
+const YUEDE: Record<string, string> = { 寅: '丙', 午: '丙', 戌: '丙', 申: '壬', 子: '壬', 辰: '壬', 亥: '甲', 卯: '甲', 未: '甲', 巳: '庚', 酉: '庚', 丑: '庚' }; // 月德（按月支三合局之阳干）
+// 红鸾天喜（按年支，互为对冲）
+const HONGLUAN: Record<string, string> = { 子: '卯', 丑: '寅', 寅: '丑', 卯: '子', 辰: '亥', 巳: '戌', 午: '酉', 未: '申', 申: '未', 酉: '午', 戌: '巳', 亥: '辰' };
+// 孤辰寡宿（按年支三会局）
+const GUCHEN: Record<string, string> = { 亥: '寅', 子: '寅', 丑: '寅', 寅: '巳', 卯: '巳', 辰: '巳', 巳: '申', 午: '申', 未: '申', 申: '亥', 酉: '亥', 戌: '亥' };
+const GUASU: Record<string, string> = { 亥: '戌', 子: '戌', 丑: '戌', 寅: '丑', 卯: '丑', 辰: '丑', 巳: '辰', 午: '辰', 未: '辰', 申: '未', 酉: '未', 戌: '未' };
+// 日柱级神煞
+const SHILING_RI = ['甲辰', '乙亥', '丙辰', '丁酉', '戊午', '庚戌', '庚寅', '辛亥', '壬寅', '癸未'];
+const KUIGANG_RI = ['庚辰', '庚戌', '壬辰', '戊戌'];
+const YINYANG_CHACUO_RI = ['丙子', '丁丑', '戊寅', '辛卯', '壬辰', '癸巳', '丙午', '丁未', '戊申', '辛酉', '壬戌', '癸亥'];
+// 三合局神煞：桃花/驿马/华盖/将星/劫煞/亡神（按年支与日支两支查）
 const SANHE_GROUP: Record<string, string> = {}; // 支 → 局名
 for (const b of ['申', '子', '辰']) SANHE_GROUP[b] = '申子辰';
 for (const b of ['寅', '午', '戌']) SANHE_GROUP[b] = '寅午戌';
 for (const b of ['巳', '酉', '丑']) SANHE_GROUP[b] = '巳酉丑';
 for (const b of ['亥', '卯', '未']) SANHE_GROUP[b] = '亥卯未';
-const GROUP_SHA: Record<string, { 桃花: string; 驿马: string; 华盖: string; 将星: string }> = {
-  申子辰: { 桃花: '酉', 驿马: '寅', 华盖: '辰', 将星: '子' },
-  寅午戌: { 桃花: '卯', 驿马: '申', 华盖: '戌', 将星: '午' },
-  巳酉丑: { 桃花: '午', 驿马: '亥', 华盖: '丑', 将星: '酉' },
-  亥卯未: { 桃花: '子', 驿马: '巳', 华盖: '未', 将星: '卯' },
+const GROUP_SHA: Record<string, Record<string, string>> = {
+  申子辰: { 桃花: '酉', 驿马: '寅', 华盖: '辰', 将星: '子', 劫煞: '巳', 亡神: '亥' },
+  寅午戌: { 桃花: '卯', 驿马: '申', 华盖: '戌', 将星: '午', 劫煞: '亥', 亡神: '巳' },
+  巳酉丑: { 桃花: '午', 驿马: '亥', 华盖: '丑', 将星: '酉', 劫煞: '寅', 亡神: '申' },
+  亥卯未: { 桃花: '子', 驿马: '巳', 华盖: '未', 将星: '卯', 劫煞: '申', 亡神: '寅' },
 };
 
-/** 汇总某地支所临神煞（以日干为主查贵人/文昌/禄刃，以年支日支查三合局煞） */
-function shenshaOfBranch(branch: string, dayStem: string, yearBranch: string, dayBranch: string): string[] {
+interface ShaCtx { dayStem: string; yearBranch: string; dayBranch: string; monthBranch: string; dayGz: string }
+
+/** 汇总某柱所临神煞（日干查贵人禄刃等，年/日支查三合局煞，月支查天德月德天医，年支查红鸾天喜孤辰寡宿） */
+function shenshaOfPillar(stem: string, branch: string, isDayPillar: boolean, c: ShaCtx): string[] {
   const out: string[] = [];
-  if (TIANYI[dayStem]?.includes(branch)) out.push('天乙贵人');
-  if (WENCHANG[dayStem] === branch) out.push('文昌');
-  if (LUSHEN[dayStem] === branch) out.push('禄神');
-  if (YANGREN[dayStem] === branch) out.push('羊刃');
-  for (const [label, ref] of [['日支', dayBranch], ['年支', yearBranch]] as const) {
+  const add = (s: string) => { if (!out.includes(s)) out.push(s); };
+  // 日干所查
+  if (TIANYI[c.dayStem]?.includes(branch)) add('天乙贵人');
+  if (TAIJI[c.dayStem]?.includes(branch)) add('太极贵人');
+  if (WENCHANG[c.dayStem] === branch) add('文昌');
+  if (LUSHEN[c.dayStem] === branch) add('禄神');
+  if (JINYU[c.dayStem] === branch) add('金舆');
+  if (HONGYAN[c.dayStem] === branch) add('红艳');
+  if (YANGREN[c.dayStem] === branch) add('羊刃');
+  // 月支所查（天德月德可能是天干也可能是地支）
+  if (TIANDE[c.monthBranch] === branch || TIANDE[c.monthBranch] === stem) add('天德贵人');
+  if (YUEDE[c.monthBranch] === stem) add('月德贵人');
+  // 天医：月支退一位
+  const mbIdx = BRANCHES.indexOf(c.monthBranch as never);
+  if (BRANCHES[(mbIdx + 11) % 12] === branch) add('天医');
+  // 年支所查
+  if (HONGLUAN[c.yearBranch] === branch) add('红鸾');
+  const hlIdx = BRANCHES.indexOf(HONGLUAN[c.yearBranch] as never);
+  if (BRANCHES[(hlIdx + 6) % 12] === branch) add('天喜');
+  if (GUCHEN[c.yearBranch] === branch) add('孤辰');
+  if (GUASU[c.yearBranch] === branch) add('寡宿');
+  // 三合局煞（日支为主，年支兼查加注）
+  for (const [label, ref] of [['日支', c.dayBranch], ['年支', c.yearBranch]] as const) {
     const g = GROUP_SHA[SANHE_GROUP[ref]];
     if (!g) continue;
     for (const [name, target] of Object.entries(g)) {
-      if (target === branch) out.push(label === '日支' ? name : `${name}(年)`);
+      if (target === branch) add(label === '日支' ? name : `${name}(年)`);
     }
+  }
+  // 日柱级
+  if (isDayPillar) {
+    if (SHILING_RI.includes(c.dayGz)) add('十灵日');
+    if (KUIGANG_RI.includes(c.dayGz)) add('魁罡');
+    if (YINYANG_CHACUO_RI.includes(c.dayGz)) add('阴阳差错');
   }
   return out;
 }
@@ -278,7 +324,9 @@ export function paipanBazi(date: Date, gender: 'male' | 'female'): BaZiChart {
       kong: kong.includes(branch),
       dishi: changsheng12(dayMaster, branch),
       zizuo: changsheng12(stem, branch),
-      shensha: shenshaOfBranch(branch, dayMaster, gz.year[1], gz.dayBranch),
+      shensha: shenshaOfPillar(stem, branch, name === '日柱', {
+        dayStem: dayMaster, yearBranch: gz.year[1], dayBranch: gz.dayBranch, monthBranch: gz.monthBranch, dayGz: gz.day,
+      }),
     };
   };
   const pillars = [mk('年柱', gz.year), mk('月柱', gz.month), mk('日柱', gz.day), mk('时柱', gz.hour)];

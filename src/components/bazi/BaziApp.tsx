@@ -206,9 +206,17 @@ export function BaziApp() {
                     {chart.pillars.map((p) => (
                       <td key={p.name} className="py-1">
                         {p.shensha.length
-                          ? p.shensha.map((s) => (
-                              <span key={s} className={`inline-block rounded px-1 mr-0.5 mb-0.5 ${s.includes('贵人') || s.includes('文昌') || s.includes('禄') ? 'bg-emerald-100 text-emerald-800' : s.includes('羊刃') ? 'bg-red-100 text-red-700' : 'bg-[#eef0e5] text-[#6b6152]'}`}>{s}</span>
-                            ))
+                          ? p.shensha.map((s) => {
+                              const good = /贵人|文昌|禄神|金舆|天医|十灵/.test(s);
+                              const bad = /羊刃|劫煞|亡神|孤辰|寡宿|阴阳差错/.test(s);
+                              const love = /桃花|红艳|红鸾|天喜/.test(s);
+                              const cls = good ? 'bg-emerald-100 text-emerald-800'
+                                : bad ? 'bg-red-100 text-red-700'
+                                : love ? 'bg-pink-100 text-pink-700'
+                                : s.includes('魁罡') ? 'bg-purple-100 text-purple-700'
+                                : 'bg-[#eef0e5] text-[#6b6152]';
+                              return <span key={s} className={`inline-block rounded px-1 mr-0.5 mb-0.5 ${cls}`}>{s}</span>;
+                            })
                           : <span className="text-[#c0b89e]">—</span>}
                       </td>
                     ))}
@@ -220,6 +228,9 @@ export function BaziApp() {
                 </tbody>
               </table>
             </div>
+            <p className="mt-2 text-[10px] text-[#9a8f78] leading-snug">
+              神煞图例：<span className="text-emerald-700">绿＝吉神</span>（天乙/太极/天德/月德贵人、文昌、禄神、金舆、天医、十灵日）　<span className="text-pink-700">粉＝姻缘</span>（桃花、红艳、红鸾、天喜）　<span className="text-red-700">红＝凶煞</span>（羊刃、劫煞、亡神、孤辰、寡宿、阴阳差错）　紫＝魁罡　灰＝中性（驿马、华盖、将星）。查法以《三命通会》为准，神煞只作辅助参考，不可喧宾夺主盖过五行生克。
+            </p>
             {/* 五行力量条 */}
             <div className="mt-3 space-y-1">
               {ELEMENTS.map((e) => (
