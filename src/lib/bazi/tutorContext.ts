@@ -1,5 +1,6 @@
 // 八字助教上下文：把命盘序列化为教学上下文，prompt 以八部典籍为解读依据
 import type { BaZiChart } from './engine';
+import { analyzeYongshen, analyzeDayun, analyzeLiunian } from './forecast';
 
 export const BAZI_BOOKS = [
   { name: '《四柱预测学》', author: '邵伟华（当代）', use: '现代入门体系：排盘步骤、十神心性、断事程式，适合零基础建立框架' },
@@ -34,18 +35,44 @@ export function buildBaziContext(c: BaZiChart, focus?: string): string {
     );
   }
   lines.push(`五行力量：木${c.wuxingCount.木} 火${c.wuxingCount.火} 土${c.wuxingCount.土} 金${c.wuxingCount.金} 水${c.wuxingCount.水}（教学简化计分）`);
+
+  // —— 用神四通道与质检 ——
+  const nowYear = new Date().getFullYear();
+  const yong = analyzeYongshen(c);
+  lines.push(`【用神结论】${yong.summary}`);
+  lines.push(`用神质检三问：${yong.quality.map((q) => `${q.q}${q.ok ? '过关' : '未过'}（${q.a}）`).join('；')}`);
+
+  // —— 大运逐年分析 ——
+  const dy = analyzeDayun(c, yong, nowYear);
   lines.push(`大运${c.dayunDir}：${c.qiyunNote}`);
-  lines.push(`大运序列：${c.dayun.map((d) => `${d.startAge}岁起${d.gz}(${d.shiShen})`).join('，')}`);
+  lines.push(`大运序列（含吉凶基调）：${dy.map((d) => `${d.startAge}岁起${d.gz}(${d.shiShen}·${d.tone}${d.current ? '·当前' : ''}${d.hits.length ? `，引爆点：${d.hits.join('；')}` : ''})`).join('，')}`);
+
+  // —— 流年应期（过去验证 + 未来预测素材） ——
+  const ln = analyzeLiunian(c, yong, dy, nowYear);
+  const withTrig = ln.filter((y) => y.triggers.length > 0);
+  const past = withTrig.filter((y) => y.past).slice(-5);
+  const future = withTrig.filter((y) => !y.past).slice(0, 6);
+  if (past.length) lines.push(`过去有引动的流年（供反推验证）：${past.map((y) => `${y.year}${y.gz}(${y.shiShen}·${y.tone})：${y.triggers.join('；')}`).join('｜')}`);
+  if (future.length) lines.push(`未来有引动的流年（预测重点）：${future.map((y) => `${y.year}${y.gz}(${y.shiShen}·${y.tone})：${y.triggers.join('；')}`).join('｜')}`);
+  lines.push(`全部流年基调：${ln.map((y) => `${y.year}${y.gz}${y.tone}`).join('、')}`);
   return lines.join('\n');
 }
 
 const STEP_NAMES: Record<number, string> = {
-  1: '排四柱（年月日时柱的推法）',
-  2: '定日主与十神（六亲心性）',
-  3: '五行旺衰（得令得地得势）',
-  4: '取用神（旺衰·格局·调候·病药）',
-  5: '排大运（顺逆与起运数）',
-  6: '综合论命（AI 完整解读）',
+  1: '日主定性（十天干性情）',
+  2: '月令环境（季节寒暖与调候伏笔）',
+  3: '强弱判断（得令得地得势）',
+  4: '取用神（扶抑·调候·通关·顺势四通道）',
+  5: '用神质检（局里有吗·有根吗·受伤吗）',
+  6: '定格局（月令透干取格与相神成败）',
+  7: '十神读人（十神×宫位）',
+  8: '刑冲合害（机关引线）',
+  9: '神煞标注（应象润色）',
+  10: '排大运（顺逆与起运数）',
+  11: '大运分析（喜忌定调与引爆点）',
+  12: '流年应期（七大触发机制）',
+  13: '流月细化（应期到月）',
+  14: '综合论命（AI 完整解读）',
 };
 
 export function buildBaziSystemPrompt(stepNo?: number): string {
@@ -67,15 +94,17 @@ export function buildBaziSystemPrompt(stepNo?: number): string {
 /** AI 完整命理解读 prompt */
 export function buildBaziReadingPrompt(): string {
   return [
-    `你是八字命理师，精通${BOOK_NAMES}八部典籍。下面给你一个完整命盘数据（含学员想了解的方面），请做完整解读，读者是零基础学员。`,
+    `你是八字命理师，精通${BOOK_NAMES}八部典籍。下面给你一个完整命盘数据（含强弱、用神四通道、格局、刑冲合害、大运吉凶基调、过去与未来有引动的流年，以及学员想了解的方面），请做完整解读，读者是零基础学员。`,
     '严格按以下分节输出，每节以【标题】开头单独成行：',
-    '【命盘总览】一两句话概括此命的整体气象（日主、月令、五行偏向、身强身弱）；',
-    '【五行旺衰与性格】从五行力量与十神组合讲性格特质与天赋倾向（如《滴天髓》论性情、《渊海子平》论十神心性），引用具体干支十神；',
-    '【格局与用神】结合给出的取格推演点评格局成败（《子平真诠》月令取格、成格败格）、调候需要（《穷通宝鉴》）、病药所在（《神峰通考》），并分析干支合冲刑害对格局与用神的影响（用神逢冲则力减、忌神受制反为福），给出喜用与忌讳的五行；',
-    '【逐项分析】针对学员想了解的方面（若无则说明事业、财运、感情、健康大意），结合十神与柱位（年月日时分主祖辈/父母青年/自身夫妻/子女晚年）分析；',
-    '【大运走势】结合大运序列，指出哪几步运较顺、哪几步宜守（注明起止年龄），说明判断逻辑；',
+    '【命盘总览】一两句话概括此命的整体气象（日主、月令、五行偏向、强弱与格局）；',
+    '【性格天赋】从十天干本性、五行力量与十神组合讲性格特质与天赋倾向（《滴天髓》论性情、《渊海子平》论十神心性），引用具体干支十神；',
+    '【格局与用神】结合给出的取格推演与用神四通道校验，点评格局成败（《子平真诠》）、调候需要（《穷通宝鉴》）、病药通关（《神峰通考》），说明用神质检三问的结果对格局高低的影响；',
+    '【过去回顾】从给出的「过去有引动的流年」中挑 2-3 个最有标志性的年份，说明该年触发了什么机制（如冲动夫妻宫、填实空亡、岁运并临）、理论上容易发生哪类事情（如变动、婚恋、压力、破财），语气为「据盘理推测」，请学员自行对照验证——这是检验命盘判读是否正确的环节；',
+    '【未来展望】从「未来有引动的流年」出发，逐年指出未来 3-5 年哪些年份较顺（引动喜用）、哪些年份宜守（冲忌、天克地冲），给出当年的主题词与注意事项；',
+    '【大运走势】结合大运序列的吉凶基调，指出哪几步运较顺、哪几步宜守（注明起止年龄与「当前」运），说明判断逻辑；',
+    '【逐项分析】针对学员想了解的方面（若无则说明事业、财运、感情、健康大意），结合十神与柱位（年月日时分主祖辈早年/父母青年/自身夫妻/子女晚年）分析；',
     '【建议与趋避】从五行喜用角度给具体建议：适合的行业方向、方位、颜色、人际合作属相等；',
     '【给小白的话】两三句大白话总结，并提醒：八字是传统术数的趋势参考，「命好不如运好，运好不如心态好」，具体人生选择以现实努力与专业意见为准。',
-    '要求：总长度 900 字以内；通俗但专业；一切判断基于给出的命盘数据，不得编造干支；注明典籍出处。',
+    '要求：总长度 1200 字以内；通俗但专业；一切判断基于给出的命盘数据，不得编造干支与年份；注明典籍出处。',
   ].join('\n');
 }
