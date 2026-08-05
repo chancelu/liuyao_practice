@@ -1,73 +1,76 @@
-# React + TypeScript + Vite
+# 玄学教学研习工作流
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+一个面向零基础学习者的传统术数教学工具：**六爻**（京房纳甲）与**八字**（子平法）双模块。
+不只是排盘——每一步都讲透「怎么推、为什么这么推、出自哪本典籍」，并接入 **Kimi K3** 大模型做逐步答疑与完整解读。
 
-Currently, two official plugins are available:
+## 功能总览
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 🔮 六爻 · 云笈四卷
 
-## React Compiler
+以《云笈书院六爻卷》卷一~卷四（易理 / 卦理 / 装卦 / 用神）为教材依据：
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **完整排盘引擎**：纳甲装卦、六亲六神、世应卦身、旬空、月破日破暗动、化进化退、回头生克、伏神、互卦、反伏吟
+- **九步研习工作流**：起卦成象 → 定时定局 → 定宫安世应 → 纳甲装卦 → 配六亲六神 → 查动静参数 → 取用神 → 旺衰生克 → 综合断卦。每步含「推演过程 / 规则歌诀 / 课程出处」三块教学内容
+- **具体问题驱动**：输入所问何事，Kimi K3 自动归类测事类别、定用神（可手动校正）
+- **教学卦例库**：课程原例与典型格局，一键载入研习
+- **AI 完整断卦**：结论 / 断卦过程 / 应期 / 决策建议 / 化解趋避 / 给小白的话
+- **必背歌诀速查**：卷一/卷三/卷四核心歌诀
 
-## Expanding the ESLint configuration
+### 🏛️ 八字 · 子平典籍
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+以八部典籍为解读依据：《四柱预测学》《千里命稿》《渊海子平》《子平真诠》《滴天髓》《穷通宝鉴》《三命通会》《神峰通考》：
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **完整排盘**：四柱、十神、藏干、地势（日主十二长生）、自坐、纳音、旬空、胎元
+- **神煞 20 种**：天乙/太极/天德/月德贵人、文昌、禄神、金舆、天医、羊刃、桃花、红艳、红鸾、天喜、驿马、华盖、将星、劫煞、亡神、孤辰、寡宿、十灵日、魁罡、阴阳差错日
+- **三因子旺衰模型**：得令 40（月令旺相休囚死）+ 得地 30（通根本气/中气/余气）+ 得势 30（天干印比帮扶），逐项明细打分
+- **大运**：阳男阴女顺行 / 阴男阳女逆行，三天折一年起运，八步运含起止年龄
+- **六步研习工作流**：排四柱 → 定日主与十神 → 五行旺衰 → 取用神（旺衰/格局/调候/病药四派并讲）→ 排大运 → AI 综合论命
+- **AI 命理解读**：命盘总览 / 性格天赋 / 格局用神 / 逐项分析 / 大运走势 / 建议趋避
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### 🤖 Kimi K3 助教（双模块通用）
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- 每一步工作流卡片内可**针对该步提问**（助教知道当前卦局/命盘的全部数据）
+- 右下角全局面板自由提问，回复支持 Markdown 渲染
+- **密钥安全**：API Key 仅在界面中手动填入，存浏览器 localStorage，随请求头发给本地开发代理，不落任何文件、不进代码仓库
+
+## 快速开始
+
+```bash
+npm install
+npm run dev        # 打开终端提示的本地地址
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+AI 功能（助教问答 / AI 定用神 / AI 断卦 / AI 命理）仅在 `npm run dev` 下可用：
+打开页面 → 点右下角「问助教」→ 在面板顶部填入你的 Kimi API Key（[kimi.com 控制台](https://www.kimi.com)获取）→ 保存即可。
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+生产构建（无 AI 功能，排盘与教学内容完整可用）：
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build && npm run preview
 ```
+
+## 技术栈
+
+React 19 + TypeScript + Vite + Tailwind CSS + shadcn/ui + lucide-react。
+排盘与历法全部本地计算（立春换年、节气换月、儒略日推日柱、五虎遁五鼠遁），无后端依赖；
+AI 能力通过 Vite 开发服务器的 `/api/tutor` 代理转发至 Kimi K3（`k3-256k`，OpenAI 兼容接口，SSE 流式）。
+
+## 项目结构
+
+```
+src/
+├── lib/
+│   ├── liuyao/          # 六爻：历法 / 排盘引擎 / 断卦规则 / 教学数据 / 助教上下文
+│   └── bazi/            # 八字：排盘引擎（十神/旺衰/神煞/大运）/ 典籍 prompt
+├── components/
+│   ├── liuyao/          # 六爻页：输入面板 / 排盘板 / 九步工作流 / 歌诀 / 助教组件
+│   └── bazi/            # 八字页：命盘表 / 六步工作流 / 典籍速查
+└── data/                # 六十四卦数据
+```
+
+## 说明与免责
+
+- 节气换月采用通用近似公式（误差 ±1 天），交节当日请自行核对月建
+- 旺衰判定为教学量化模型，细论还需参看合化、通关与调候
+- 八字典籍原文未内置，AI 按典籍的体系方法解读
+- 术数是传统文化中的趋势参考，非科学预测工具；涉及健康与重大决策，请以现实专业意见为准
