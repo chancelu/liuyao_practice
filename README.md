@@ -31,7 +31,7 @@
 
 - 每一步工作流卡片内可**针对该步提问**（助教知道当前卦局/命盘的全部数据）
 - 右下角全局面板自由提问，回复支持 Markdown 渲染
-- **密钥安全**：API Key 仅在界面中手动填入，存浏览器 localStorage，随请求头发给本地开发代理，不落任何文件、不进代码仓库
+- **密钥安全**：API Key 仅在界面中手动填入，存浏览器 localStorage，随请求头发给服务端代理，不落任何文件、不进代码仓库；站长也可在服务器环境变量配置 `KIMI_API_KEY` 作为全站兜底
 
 ## 快速开始
 
@@ -40,20 +40,30 @@ npm install
 npm run dev        # 打开终端提示的本地地址
 ```
 
-AI 功能（助教问答 / AI 定用神 / AI 断卦 / AI 命理）仅在 `npm run dev` 下可用：
 打开页面 → 点右下角「问助教」→ 在面板顶部填入你的 Kimi API Key（[kimi.com 控制台](https://www.kimi.com)获取）→ 保存即可。
+本地开发时也可以在项目根目录建 `.env.local` 写入 `KIMI_API_KEY=sk-...`（已在 .gitignore），开发代理会兜底读取，界面就不用再填。
 
-生产构建（无 AI 功能，排盘与教学内容完整可用）：
+生产构建（排盘与教学内容完整可用；AI 功能需配合下方 Vercel 部署或自建 `/api/tutor` 代理）：
 
 ```bash
 npm run build && npm run preview
 ```
 
+## 部署（Vercel）
+
+仓库已含 `vercel.json`（Vite 框架、`dist` 输出、`api/tutor.ts` Edge Function），关联仓库后推送即自动部署：
+
+1. Vercel 新建项目 → Import 本仓库 → Framework 选 **Vite**（保持默认 `dist` 输出，勿填 `build`）
+2. Settings → Environment Variables 添加 **`KIMI_API_KEY`**（你的 sk-kimi key，勾 Production + Preview），添加后 Redeploy 一次生效
+3. 不配环境变量也能用：访客在「问助教」面板里填自己的 Key 即可（Key 只存在访客自己浏览器里）
+
+线上地址：`https://workspace-chancelus-projects.vercel.app/`
+
 ## 技术栈
 
 React 19 + TypeScript + Vite + Tailwind CSS + shadcn/ui + lucide-react。
 排盘与历法全部本地计算（立春换年、节气换月、儒略日推日柱、五虎遁五鼠遁），无后端依赖；
-AI 能力通过 Vite 开发服务器的 `/api/tutor` 代理转发至 Kimi K3（`k3-256k`，OpenAI 兼容接口，SSE 流式）。
+AI 能力经 `/api/tutor` 代理转发至 Kimi K3（`k3-256k`，OpenAI 兼容接口，SSE 流式）——本地开发走 Vite 开发代理，生产走 Vercel Edge Function（`api/tutor.ts`），Key 优先级：请求头 > 环境变量。
 
 ## 项目结构
 
