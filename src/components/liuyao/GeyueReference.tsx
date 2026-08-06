@@ -12,7 +12,7 @@ export function GeyueReference() {
   return (
     <div className="space-y-3">
       {GEYUE.map((g, gi) => (
-        <div key={gi} className="border border-[#2e375c] rounded-lg bg-[#151b31]">
+        <div key={gi} className="panel">
           <button onClick={() => toggleGroup(gi)} className="w-full flex items-center justify-between px-4 py-3 text-left">
             <div>
               <span className="font-bold text-[#e8e1cd]" style={{ fontFamily: '"Songti SC",serif' }}>{g.title}</span>
@@ -26,10 +26,10 @@ export function GeyueReference() {
                 const key = `${gi}-${it.name}`;
                 const open = openItems.includes(key);
                 return (
-                  <div key={key} className={`border rounded ${open ? 'border-[#b08a44] bg-[#11162b]' : 'border-[#283050] bg-[#1a2140]'}`}>
+                  <div key={key} className={`border rounded-lg transition-colors ${open ? 'border-[#c9a962]/45 bg-[#131008]' : 'border-[#c9a962]/10 bg-[#1d1912]/70'}`}>
                     <button onClick={() => toggleItem(key)} className="w-full flex items-center justify-between px-3 py-2 text-left">
                       <span className="text-xs font-semibold text-[#d4c294] flex items-center gap-1.5">
-                        <ScrollText size={11} className="text-[#c9a05e]" /> {it.name}
+                        <ScrollText size={11} className="text-[#d4b578]" /> {it.name}
                       </span>
                       {open ? <ChevronDown size={13} className="text-[#8d8670]" /> : <ChevronRight size={13} className="text-[#8d8670]" />}
                     </button>

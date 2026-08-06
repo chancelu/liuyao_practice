@@ -71,7 +71,7 @@ function Teach({ title, children }: { title: string; children: React.ReactNode }
 
 function Basis({ text }: { text: string }) {
   return (
-    <div className="rounded border border-[#283050] bg-[#1d2440] px-3 py-1.5 text-[11px] leading-relaxed text-[#a89f86]">
+    <div className="rounded border border-[#32281a] bg-[#201a12] px-3 py-1.5 text-[11px] leading-relaxed text-[#a89f86]">
       <ScrollText size={11} className="inline mr-1 -mt-0.5" /><b>依据：</b>{text}
     </div>
   );
@@ -99,9 +99,9 @@ function StepCard({ step, open, onToggle, ask, children }: {
   step: StepDef; open: boolean; onToggle: () => void; ask: React.ReactNode; children: React.ReactNode;
 }) {
   return (
-    <div className="bg-[#151b31] border border-[#2e375c] rounded-lg overflow-hidden">
-      <button onClick={onToggle} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#252c4e]">
-        <span className="w-6 h-6 rounded-full bg-[#b08a44] text-white text-xs font-bold flex items-center justify-center shrink-0">{step.no}</span>
+    <div className="panel overflow-hidden">
+      <button onClick={onToggle} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#c9a962]/5 transition-colors">
+        <span className="w-6 h-6 rounded-full bg-gradient-to-b from-[#e3c98a] to-[#b08d48] text-[#1a1408] text-xs font-bold flex items-center justify-center shrink-0" style={{ fontFamily: '"Songti SC",serif' }}>{step.no}</span>
         <span className="flex-1 min-w-0">
           <span className="font-bold text-sm" style={{ fontFamily: '"Songti SC",serif' }}>{step.title}</span>
           <span className="text-[11px] text-[#6f6a58] ml-2">{step.subtitle}</span>
@@ -109,7 +109,7 @@ function StepCard({ step, open, onToggle, ask, children }: {
         {open ? <ChevronDown size={16} className="text-[#6f6a58]" /> : <ChevronRight size={16} className="text-[#6f6a58]" />}
       </button>
       {open && (
-        <div className="px-4 pb-4 border-t border-[#283050] pt-3">
+        <div className="px-4 pb-4 border-t border-[#32281a] pt-3">
           {children}
           {ask}
         </div>
@@ -181,15 +181,15 @@ export function BaziApp() {
     <>
       <main className="max-w-7xl mx-auto px-4 py-5 grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-5 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
         {/* 左：输入 */}
-        <aside className="bg-[#151b31] border border-[#2e375c] rounded-lg p-4 lg:h-full lg:overflow-y-auto">
-          <h2 className="text-sm font-bold mb-3" style={{ fontFamily: '"Songti SC",serif' }}>一、生辰输入</h2>
+        <aside className="panel p-4 lg:h-full lg:overflow-y-auto">
+          <div className="section-head"><span className="num text-base">壹</span><span className="title">生辰输入</span></div>
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-[#c8bd9c] mb-1.5">性别（定乾造/坤造与大运顺逆）</label>
               <div className="grid grid-cols-2 gap-1.5">
                 {([['male', '男 · 乾造'], ['female', '女 · 坤造']] as const).map(([v, label]) => (
                   <button key={v} onClick={() => setGender(v)}
-                    className={`text-sm py-2 rounded-md border ${gender === v ? 'border-[#b08a44] bg-[#b08a44] text-white' : 'border-[#2e375c] bg-[#11162b] text-[#b0a78c] hover:border-[#b08a44]'}`}>
+                    className={`text-sm py-2 rounded-lg border transition-colors ${gender === v ? 'border-[#c9a962] bg-gradient-to-b from-[#e3c98a] to-[#b08d48] text-[#1a1408] font-bold' : 'border-[#3a2f1e] bg-[#131008] text-[#b0a78c] hover:border-[#c9a962]/60'}`}>
                     {label}
                   </button>
                 ))}
@@ -202,7 +202,7 @@ export function BaziApp() {
               <label className="block text-xs font-semibold text-[#c8bd9c] mb-1.5">想了解的方面（选填，AI 解读会侧重）</label>
               <input value={focus} onChange={(e) => setFocus(e.target.value)}
                 placeholder="如：事业方向 / 财运 / 婚姻感情 / 学业"
-                className="w-full border border-[#2e375c] rounded-md bg-[#11162b] px-3 py-2 text-sm text-[#e8e1cd] focus:outline-none focus:border-[#b08a44]" />
+                className="w-full border border-[#3a2f1e] rounded-md bg-[#131008] px-3 py-2 text-sm text-[#e8e1cd] focus:outline-none focus:border-[#c9a962]" />
             </div>
           </div>
         </aside>
@@ -210,12 +210,13 @@ export function BaziApp() {
         {/* 右：命盘 + 教学流程 */}
         <div className="space-y-5 min-w-0 lg:h-full lg:overflow-y-auto lg:pr-1">
           {/* 命盘表 */}
-          <section className="bg-[#151b31] border border-[#2e375c] rounded-lg p-4">
+          <section className="panel p-4">
             <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
-              <h2 className="text-sm font-bold" style={{ fontFamily: '"Songti SC",serif' }}>
-                二、命盘 · {chart.genderLabel} · 日主 {chart.dayMaster}{chart.dayMasterElement}（{chart.strength.label}）
-                <span className="ml-2 text-xs font-bold bg-[#b08a44] text-white rounded px-1.5 py-0.5 align-middle">{chart.geju.name}</span>
-              </h2>
+              <div className="section-head !mb-0">
+                <span className="num text-base">贰</span>
+                <span className="title">命盘 · {chart.genderLabel} · 日主 {chart.dayMaster}{chart.dayMasterElement}（{chart.strength.label}）</span>
+                <span className="text-xs font-bold bg-gradient-to-b from-[#e3c98a] to-[#b08d48] text-[#1a1408] rounded-full px-2.5 py-0.5 align-middle">{chart.geju.name}</span>
+              </div>
               <div className="text-xs text-[#8d8670]">胎元{chart.taiyuan} · {chart.kong.join('')}空 · 大运{chart.dayunDir} · 约 {chart.qiyunAge} 岁起运</div>
             </div>
             <div className="overflow-x-auto">
@@ -291,17 +292,17 @@ export function BaziApp() {
             </p>
             {/* 格局 + 刑冲合害速览 */}
             <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="border border-[#283050] rounded-lg bg-[#1a2140] px-3 py-2.5">
+              <div className="border border-[#32281a] rounded-lg bg-[#1d1912] px-3 py-2.5">
                 <div className="text-xs font-bold text-[#c8bd9c] mb-1.5">
-                  月令取格：<span className="text-sm text-[#b08a44]" style={{ fontFamily: '"Songti SC",serif' }}>{chart.geju.name}</span>
+                  月令取格：<span className="text-sm text-[#c9a962]" style={{ fontFamily: '"Songti SC",serif' }}>{chart.geju.name}</span>
                   {chart.geju.touGan && <span className="ml-1 font-normal text-[#6f6a58]">（{chart.geju.touGan}透干）</span>}
                 </div>
                 <ul className="space-y-1">
                   {chart.geju.steps.map((s, i) => <li key={i} className="text-[11px] text-[#a89f86] leading-snug">· {s}</li>)}
                 </ul>
-                {chart.geju.note && <p className="mt-1.5 text-[11px] text-[#d4b578] leading-snug border-t border-[#232a49] pt-1.5"><b>喜忌：</b>{chart.geju.note}</p>}
+                {chart.geju.note && <p className="mt-1.5 text-[11px] text-[#d4b578] leading-snug border-t border-[#292219] pt-1.5"><b>喜忌：</b>{chart.geju.note}</p>}
               </div>
-              <div className="border border-[#283050] rounded-lg bg-[#1a2140] px-3 py-2.5">
+              <div className="border border-[#32281a] rounded-lg bg-[#1d1912] px-3 py-2.5">
                 <div className="text-xs font-bold text-[#c8bd9c] mb-1.5">干支关系 · 合冲刑害（详见第 8 步）</div>
                 {chart.relations.length ? (
                   <div className="flex flex-wrap gap-1">
@@ -321,7 +322,7 @@ export function BaziApp() {
               {ELEMENTS.map((e) => (
                 <div key={e} className="flex items-center gap-2 text-xs">
                   <span className="w-4 font-bold" style={{ color: ELEM_COLOR[e] }}>{e}</span>
-                  <div className="flex-1 h-2.5 bg-[#232a49] rounded-full overflow-hidden">
+                  <div className="flex-1 h-2.5 bg-[#292219] rounded-full overflow-hidden">
                     <div className="h-full rounded-full" style={{ width: `${(chart.wuxingCount[e] / chart.totalPower) * 100}%`, background: ELEM_COLOR[e] }} />
                   </div>
                   <span className="w-6 text-right text-[#8d8670]">{chart.wuxingCount[e]}</span>
@@ -332,7 +333,7 @@ export function BaziApp() {
 
           {/* 十三步教学流程 + 综合论命 */}
           <section className="space-y-3">
-            <h2 className="text-sm font-bold" style={{ fontFamily: '"Songti SC",serif' }}>三、十三步研习工作流</h2>
+            <div className="section-head"><span className="num text-base">叁</span><span className="title">十三步研习工作流</span></div>
 
             {/* ① 日主定性 */}
             <StepCard step={STEPS[0]} open={isOpen(1)} onToggle={() => toggle(1)} ask={askFor(1)}>
@@ -341,7 +342,7 @@ export function BaziApp() {
                 <p>十天干性情速览：</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
                   {Object.entries(STEM_NATURE).map(([s, v]) => (
-                    <div key={s} className={`text-[11px] border rounded px-2 py-1 ${s === chart.dayMaster ? 'border-[#b08a44] bg-[#252c4e]' : 'border-[#283050] bg-[#1a2140]'}`}><b>{s}</b>：{v}</div>
+                    <div key={s} className={`text-[11px] border rounded px-2 py-1 ${s === chart.dayMaster ? 'border-[#c9a962] bg-[#2c2417]' : 'border-[#32281a] bg-[#1d1912]'}`}><b>{s}</b>：{v}</div>
                   ))}
                 </div>
               </Teach>
@@ -360,7 +361,7 @@ export function BaziApp() {
 
             {/* ③ 强弱判断 */}
             <StepCard step={STEPS[2]} open={isOpen(3)} onToggle={() => toggle(3)} ask={askFor(3)}>
-              <div className="flex items-center gap-4 mb-3 border border-[#283050] rounded-lg bg-[#1a2140] px-4 py-3">
+              <div className="flex items-center gap-4 mb-3 border border-[#32281a] rounded-lg bg-[#1d1912] px-4 py-3">
                 <div className="text-center shrink-0">
                   <div className="text-2xl font-bold" style={{ fontFamily: '"Songti SC",serif' }}>{chart.strength.total}<span className="text-xs text-[#6f6a58]">/100</span></div>
                   <div className={`text-xs font-bold px-2 py-0.5 rounded mt-0.5 ${strong ? 'bg-red-400/15 text-red-300' : chart.strength.label === '中和' ? 'bg-emerald-400/15 text-emerald-300' : 'bg-blue-400/15 text-blue-300'}`}>{chart.strength.label}</div>
@@ -369,8 +370,8 @@ export function BaziApp() {
                   {([['得令（月令气候·50）', chart.strength.deling], ['得地（通根根气·30）', chart.strength.dedi], ['得势（天干帮扶·20）', chart.strength.deshi]] as const).map(([name, f]) => (
                     <div key={name} className="flex items-center gap-2 text-xs">
                       <span className="w-36 shrink-0 text-[#c8bd9c]">{name}</span>
-                      <div className="flex-1 h-2.5 bg-[#232a49] rounded-full overflow-hidden">
-                        <div className="h-full rounded-full bg-[#b08a44]" style={{ width: `${(f.score / f.max) * 100}%` }} />
+                      <div className="flex-1 h-2.5 bg-[#292219] rounded-full overflow-hidden">
+                        <div className="h-full rounded-full bg-[#c9a962]" style={{ width: `${(f.score / f.max) * 100}%` }} />
                       </div>
                       <span className="w-12 text-right text-[#8d8670]">{f.score}/{f.max}</span>
                     </div>
@@ -379,7 +380,7 @@ export function BaziApp() {
               </div>
               <div className="space-y-2 mb-3">
                 {([['① 得令（权重 50）', chart.strength.deling], ['② 得地（权重 30，禄刃＞墓库＞余气）', chart.strength.dedi], ['③ 得势（权重 20，天干为浮、地支为实）', chart.strength.deshi]] as const).map(([name, f]) => (
-                  <div key={name} className="border border-[#283050] rounded-lg bg-[#1a2140] px-3 py-2">
+                  <div key={name} className="border border-[#32281a] rounded-lg bg-[#1d1912] px-3 py-2">
                     <div className="text-xs font-bold text-[#c8bd9c] mb-1">{name} <span className="font-normal text-[#6f6a58]">{f.score}/{f.max} 分</span></div>
                     <p className="text-xs text-[#e8e1cd] mb-1">{f.verdict}</p>
                     <ul className="space-y-0.5">
@@ -396,28 +397,28 @@ export function BaziApp() {
             <StepCard step={STEPS[3]} open={isOpen(4)} onToggle={() => toggle(4)} ask={askFor(4)}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
                 {yong.channels.map((ch) => (
-                  <div key={ch.name} className={`border rounded-lg px-3 py-2 ${ch.active ? 'border-[#b08a44] bg-[#252c4e]' : 'border-[#283050] bg-[#1a2140]'}`}>
+                  <div key={ch.name} className={`border rounded-lg px-3 py-2 ${ch.active ? 'border-[#c9a962] bg-[#2c2417]' : 'border-[#32281a] bg-[#1d1912]'}`}>
                     <div className="text-xs font-bold text-[#c8bd9c] mb-1">
                       {ch.name} <span className="font-normal text-[#6f6a58]">{ch.book}</span>
-                      {ch.active && <span className="ml-1 text-[10px] bg-[#b08a44] text-white rounded px-1">主用</span>}
+                      {ch.active && <span className="ml-1 text-[10px] bg-[#c9a962] text-white rounded px-1">主用</span>}
                     </div>
                     <p className="text-[11px] text-[#a89f86] leading-snug">{ch.verdict}</p>
                     {ch.elem.length > 0 && (
                       <div className="mt-1 flex gap-1">
-                        {ch.elem.map((e) => <span key={e} className="text-[11px] font-bold rounded px-1.5" style={{ color: ELEM_COLOR[e], background: '#232a49' }}>{e}</span>)}
+                        {ch.elem.map((e) => <span key={e} className="text-[11px] font-bold rounded px-1.5" style={{ color: ELEM_COLOR[e], background: '#292219' }}>{e}</span>)}
                       </div>
                     )}
                   </div>
                 ))}
               </div>
               {/* 用喜忌闲分级表 */}
-              <div className="border border-[#283050] rounded-lg bg-[#1a2140] px-3 py-2 mb-3">
+              <div className="border border-[#32281a] rounded-lg bg-[#1d1912] px-3 py-2 mb-3">
                 <div className="text-xs font-bold text-[#c8bd9c] mb-1.5">用神分级表</div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 text-[11px]">
                   <div className="rounded bg-emerald-400/10 border border-emerald-400/25 px-2 py-1.5"><b className="text-emerald-300">用神</b>（治命之药）<br />{yong.yongshen.join('、')}</div>
                   <div className="rounded bg-[#16241c] border border-[#2f4a3c] px-2 py-1.5"><b className="text-[#7db58f]">喜神</b>（生扶用神）<br />{yong.xishen.join('、') || '—'}</div>
                   <div className="rounded bg-red-400/10 border border-red-400/25 px-2 py-1.5"><b className="text-red-700">忌神</b>（助病坏药）<br />{yong.jishen.join('、') || '—'}</div>
-                  <div className="rounded bg-[#242b49] border border-[#2e375c] px-2 py-1.5"><b className="text-[#8d8670]">闲神</b>（吉凶不显）<br />{yong.xianshen.join('、') || '—'}</div>
+                  <div className="rounded bg-[#242b49] border border-[#3a2f1e] px-2 py-1.5"><b className="text-[#8d8670]">闲神</b>（吉凶不显）<br />{yong.xianshen.join('、') || '—'}</div>
                 </div>
                 <p className="mt-1.5 text-[11px] text-[#d4b578] leading-snug">{yong.summary}</p>
               </div>
@@ -428,7 +429,7 @@ export function BaziApp() {
             <StepCard step={STEPS[4]} open={isOpen(5)} onToggle={() => toggle(5)} ask={askFor(5)}>
               <div className="space-y-2 mb-3">
                 {yong.quality.map((q) => (
-                  <div key={q.q} className="border border-[#283050] rounded-lg bg-[#1a2140] px-3 py-2 flex gap-2">
+                  <div key={q.q} className="border border-[#32281a] rounded-lg bg-[#1d1912] px-3 py-2 flex gap-2">
                     <span className={`shrink-0 text-[11px] font-bold rounded px-1.5 h-5 ${q.ok ? 'bg-emerald-400/15 text-emerald-300' : 'bg-red-400/15 text-red-300'}`}>{q.ok ? '过关' : '未过'}</span>
                     <div>
                       <div className="text-xs font-bold text-[#c8bd9c]">{q.q}</div>
@@ -445,15 +446,15 @@ export function BaziApp() {
 
             {/* ⑥ 定格局 */}
             <StepCard step={STEPS[5]} open={isOpen(6)} onToggle={() => toggle(6)} ask={askFor(6)}>
-              <div className="border border-[#283050] rounded-lg bg-[#1a2140] px-3 py-2 mb-3">
+              <div className="border border-[#32281a] rounded-lg bg-[#1d1912] px-3 py-2 mb-3">
                 <div className="text-xs font-bold text-[#c8bd9c] mb-1.5">
-                  本盘格局：<span className="text-sm text-[#b08a44]" style={{ fontFamily: '"Songti SC",serif' }}>{chart.geju.name}</span>
+                  本盘格局：<span className="text-sm text-[#c9a962]" style={{ fontFamily: '"Songti SC",serif' }}>{chart.geju.name}</span>
                   {chart.geju.touGan && <span className="ml-1 text-[11px] font-normal text-[#6f6a58]">（{chart.geju.touGan}透干）</span>}
                 </div>
                 <ul className="space-y-1">
                   {chart.geju.steps.map((s, i) => <li key={i} className="text-[11px] text-[#a89f86] leading-snug">· {s}</li>)}
                 </ul>
-                {chart.geju.note && <p className="mt-1.5 text-[11px] text-[#d4b578] leading-snug border-t border-[#232a49] pt-1.5"><b>成格喜忌：</b>{chart.geju.note}</p>}
+                {chart.geju.note && <p className="mt-1.5 text-[11px] text-[#d4b578] leading-snug border-t border-[#292219] pt-1.5"><b>成格喜忌：</b>{chart.geju.note}</p>}
               </div>
               <Teach title="取格的优先级与雷区">
                 <p>取格优先级：<b>本气透 ＞ 中气透 ＞ 余气透 ＞ 本气伏</b>——透出天干者「清」，伏藏不透者「浊而待透」。</p>
@@ -468,14 +469,14 @@ export function BaziApp() {
                 <p><b>干透 = 外显行为</b>（别人看得见的样子），<b>支藏 = 内在动机</b>（藏在心里的算盘）。十神落在哪个宫位，就应验在哪个领域：</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
                   {GONG_WEI.map(([g, w, note]) => (
-                    <div key={g} className="text-[11px] border border-[#283050] rounded px-2 py-1 bg-[#1a2140]"><b>{g}</b>＝{w}：{note}</div>
+                    <div key={g} className="text-[11px] border border-[#32281a] rounded px-2 py-1 bg-[#1d1912]"><b>{g}</b>＝{w}：{note}</div>
                   ))}
                 </div>
                 <p>本盘速读：{chart.pillars.map((p) => `${p.name}「${p.shiShen}」`).join('，')}——日主坐{chart.pillars[2].branch}（{chart.pillars[2].canggan[0].shiShen}），内心世界以{chart.pillars[2].canggan[0].shiShen}为主导。</p>
               </Teach>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 mb-3">
                 {Object.entries(SHISHEN_MEANING).map(([k, v]) => (
-                  <div key={k} className="text-[11px] border border-[#283050] rounded px-2 py-1.5 bg-[#1a2140]"><b>{k}</b>：{v}</div>
+                  <div key={k} className="text-[11px] border border-[#32281a] rounded px-2 py-1.5 bg-[#1d1912]"><b>{k}</b>：{v}</div>
                 ))}
               </div>
               <Basis text="《渊海子平》：以日干为主论十神六亲——正印为母、偏财为父、男命正财为妻、女命正官为夫、食伤为子女、比劫为兄弟；宫位配年月日时四限（《千里命稿》）。" />
@@ -488,7 +489,7 @@ export function BaziApp() {
                   {chart.relations.map((r, i) => {
                     const extra = relationNote(r);
                     return (
-                      <div key={i} className="border border-[#283050] rounded-lg bg-[#1a2140] px-3 py-2 text-[11px] leading-snug">
+                      <div key={i} className="border border-[#32281a] rounded-lg bg-[#1d1912] px-3 py-2 text-[11px] leading-snug">
                         <span className={`inline-block rounded px-1 mr-1 font-bold ${r.tone === 'good' ? 'bg-emerald-400/15 text-emerald-300' : r.tone === 'bad' ? 'bg-red-400/15 text-red-300' : 'bg-[#242b49] text-[#b0a78c]'}`}>{r.kind}</span>
                         <span className="font-bold text-[#e8e1cd]">{r.pair}</span>
                         <span className="block text-[#a89f86] mt-0.5">{r.detail}</span>
@@ -527,7 +528,7 @@ export function BaziApp() {
               </Teach>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 mb-3">
                 {chart.dayun.map((d) => (
-                  <div key={d.gz} className="border border-[#283050] rounded px-2 py-1.5 bg-[#1a2140] text-center">
+                  <div key={d.gz} className="border border-[#32281a] rounded px-2 py-1.5 bg-[#1d1912] text-center">
                     <div className="font-bold text-sm" style={{ fontFamily: '"Songti SC",serif' }}>{d.gz} <span className="text-[10px] font-normal text-[#8d8670]">{d.shiShen}</span></div>
                     <div className="text-[10px] text-[#8d8670]">{d.startAge}–{d.startAge + 9} 岁（约 {d.startYear} 年起）</div>
                   </div>
@@ -543,12 +544,12 @@ export function BaziApp() {
               </Teach>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
                 {dy.map((d) => (
-                  <div key={d.gz} className={`border rounded-lg px-3 py-2 ${d.current ? 'border-[#b08a44] bg-[#252c4e]' : 'border-[#283050] bg-[#1a2140]'}`}>
+                  <div key={d.gz} className={`border rounded-lg px-3 py-2 ${d.current ? 'border-[#c9a962] bg-[#2c2417]' : 'border-[#32281a] bg-[#1d1912]'}`}>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-bold text-sm" style={{ fontFamily: '"Songti SC",serif' }}>{d.gz}</span>
                       <span className="text-[10px] text-[#8d8670]">{d.shiShen} · {d.startAge}–{d.startAge + 9}岁（{d.startYear}–{d.startYear + 9}）</span>
                       <span className={`text-[10px] font-bold rounded px-1 ${TONE_CLS[d.tone]}`}>{d.tone}</span>
-                      {d.current && <span className="text-[10px] bg-[#b08a44] text-white rounded px-1">当前</span>}
+                      {d.current && <span className="text-[10px] bg-[#c9a962] text-white rounded px-1">当前</span>}
                     </div>
                     <p className="text-[11px] text-[#a89f86] leading-snug">主题：{d.theme}。运干{d.stem}{d.stemElem}主外显之事、运支{d.branch}{d.branchElem}主实际力量。</p>
                     {d.hits.length > 0 && (
@@ -569,7 +570,7 @@ export function BaziApp() {
               </Teach>
               <div className="grid grid-cols-3 md:grid-cols-6 gap-1.5 mb-3">
                 {ln.map((y) => (
-                  <div key={y.year} className={`border rounded px-1.5 py-1 text-center ${y.current ? 'border-[#b08a44] bg-[#252c4e]' : 'border-[#283050]'} ${y.past ? 'opacity-55 bg-[#181d33]' : 'bg-[#1a2140]'}`}>
+                  <div key={y.year} className={`border rounded px-1.5 py-1 text-center ${y.current ? 'border-[#c9a962] bg-[#2c2417]' : 'border-[#32281a]'} ${y.past ? 'opacity-55 bg-[#191510]' : 'bg-[#1d1912]'}`}>
                     <div className="text-[11px] font-bold">{y.year} {y.current && '◀'}</div>
                     <div className="text-xs font-bold" style={{ fontFamily: '"Songti SC",serif' }}>{y.gz}</div>
                     <div className="text-[10px] text-[#8d8670]">{y.shiShen} <span className={`inline-block rounded px-0.5 ${TONE_CLS[y.tone]}`}>{y.tone}</span></div>
@@ -579,7 +580,7 @@ export function BaziApp() {
               </div>
               <div className="space-y-1 mb-3">
                 {ln.filter((y) => y.triggers.length > 0).map((y) => (
-                  <div key={y.year} className={`text-[11px] border border-[#283050] rounded px-2 py-1.5 ${y.past ? 'bg-[#181d33] text-[#7d7663]' : 'bg-[#1a2140] text-[#e8e1cd]'}`}>
+                  <div key={y.year} className={`text-[11px] border border-[#32281a] rounded px-2 py-1.5 ${y.past ? 'bg-[#191510] text-[#7d7663]' : 'bg-[#1d1912] text-[#e8e1cd]'}`}>
                     <b>{y.year} {y.gz}（{y.shiShen}年{y.past ? '·已过' : ''}）</b>：{y.triggers.join('；')}
                   </div>
                 ))}
@@ -595,7 +596,7 @@ export function BaziApp() {
               {ly.length ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 mb-3">
                   {ly.map((m) => (
-                    <div key={m.month} className="border border-[#283050] rounded px-2 py-1.5 bg-[#1a2140] text-center">
+                    <div key={m.month} className="border border-[#32281a] rounded px-2 py-1.5 bg-[#1d1912] text-center">
                       <div className="text-xs font-bold">{m.month} 月 <span style={{ fontFamily: '"Songti SC",serif' }}>{m.gz}</span></div>
                       <div className="text-[10px] text-[#d4b578]">{m.trigger}</div>
                     </div>
@@ -623,10 +624,10 @@ export function BaziApp() {
 
           {/* 领域速查 */}
           <section>
-            <h2 className="text-sm font-bold mb-3" style={{ fontFamily: '"Songti SC",serif' }}>四、领域速查（看事公式）</h2>
+            <div className="section-head"><span className="num text-base">肆</span><span className="title">领域速查 · 看事公式</span></div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
               {DOMAIN_TABLE.map(([domain, look, formula]) => (
-                <div key={domain} className="border border-[#283050] rounded px-3 py-2 bg-[#1a2140]">
+                <div key={domain} className="border border-[#32281a] rounded px-3 py-2 bg-[#1d1912]">
                   <div className="text-xs font-bold text-[#c8bd9c]">{domain}</div>
                   <div className="text-[11px] text-[#a89f86] mt-0.5 leading-snug"><b>看什么：</b>{look}</div>
                   <div className="text-[11px] text-[#d4b578] leading-snug"><b>速查：</b>{formula}</div>
@@ -637,12 +638,12 @@ export function BaziApp() {
 
           {/* 互洽清单 */}
           <section>
-            <h2 className="text-sm font-bold mb-3" style={{ fontFamily: '"Songti SC",serif' }}>五、下断语前的互洽清单</h2>
-            <div className="border border-[#283050] rounded-lg bg-[#1a2140] px-3 py-2.5 space-y-1.5">
+            <div className="section-head"><span className="num text-base">伍</span><span className="title">下断语前的互洽清单</span></div>
+            <div className="border border-[#32281a] rounded-lg bg-[#1d1912] px-3 py-2.5 space-y-1.5">
               {CROSS_CHECK.map((c, i) => (
                 <div key={i} className="text-[11px] text-[#a89f86] leading-snug">□ {c}</div>
               ))}
-              <div className="text-[11px] text-[#d4b578] leading-snug border-t border-[#232a49] pt-1.5">
+              <div className="text-[11px] text-[#d4b578] leading-snug border-t border-[#292219] pt-1.5">
                 → 全部互洽 → 可以下断语；互相矛盾 → 回查第 ③④ 步（强弱与用神判错了最常见）。
               </div>
             </div>
@@ -650,8 +651,8 @@ export function BaziApp() {
 
           {/* 歌诀 */}
           <section>
-            <h2 className="text-sm font-bold mb-3" style={{ fontFamily: '"Songti SC",serif' }}>六、流程背诵歌诀</h2>
-            <div className="border border-[#283050] rounded-lg bg-[#1a2140] px-4 py-3 grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1">
+            <div className="section-head"><span className="num text-base">陆</span><span className="title">流程背诵歌诀</span></div>
+            <div className="border border-[#32281a] rounded-lg bg-[#1d1912] px-4 py-3 grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1">
               {VERSE.map((v) => (
                 <div key={v} className="text-xs text-[#e8e1cd] leading-relaxed" style={{ fontFamily: '"Songti SC",serif' }}>{v}</div>
               ))}
@@ -660,10 +661,10 @@ export function BaziApp() {
 
           {/* 典籍速查 */}
           <section>
-            <h2 className="text-sm font-bold mb-3" style={{ fontFamily: '"Songti SC",serif' }}>七、八字典籍速查（解读依据）</h2>
+            <div className="section-head"><span className="num text-base">柒</span><span className="title">八字典籍速查 · 解读依据</span></div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
               {BAZI_BOOKS.map((b) => (
-                <div key={b.name} className="border border-[#283050] rounded px-3 py-2 bg-[#1a2140]">
+                <div key={b.name} className="border border-[#32281a] rounded px-3 py-2 bg-[#1d1912]">
                   <div className="text-xs font-bold text-[#c8bd9c]">{b.name} <span className="font-normal text-[#6f6a58]">{b.author}</span></div>
                   <div className="text-[11px] text-[#a89f86] mt-0.5 leading-snug">{b.use}</div>
                 </div>
@@ -671,16 +672,16 @@ export function BaziApp() {
             </div>
           </section>
 
-          <footer className="text-[10px] text-[#6f6a58] leading-relaxed border-t border-[#2e375c] pt-3 pb-6">
+          <footer className="text-[10px] text-[#6f6a58] leading-relaxed border-t border-[#3a2f1e] pt-3 pb-6">
             说明：本模块排盘规则（真太阳时经度修正与均时差、立春换年、节气换月、五虎遁五鼠遁、十神、藏干、地势自坐、神煞、胎元、纳音、旬空、月令取格、刑冲合害、大运顺逆与起运、流年流月引动）均出自子平法传统体系；
             旺衰为得令50/得地30/得势20的教学量化模型，用神四通道与应期触发为教学简化判定，细论须人工参看合化、通关与调候。八字是传统术数的趋势参考，命好不如运好，运好不如心态好，具体人生抉择以现实努力与专业意见为准。
           </footer>
 
           {/* 全局助教 */}
           {tutorOpen ? (
-            <section className="fixed bottom-4 right-4 z-50 w-[380px] max-w-[92vw] shadow-2xl rounded-xl overflow-hidden border border-[#2e375c]">
-              <div className="flex items-center justify-between bg-[#5b6b9e] text-white px-3 py-2">
-                <span className="text-xs font-bold flex items-center gap-1.5"><GraduationCap size={14} /> 八字助教 · Kimi K3</span>
+            <section className="fixed bottom-4 right-4 z-50 w-[380px] max-w-[92vw] shadow-2xl rounded-xl overflow-hidden border border-[#c9a962]/30">
+              <div className="flex items-center justify-between bg-gradient-to-b from-[#e3c98a] to-[#b08d48] text-[#1a1408] px-3.5 py-2.5">
+                <span className="text-xs font-bold flex items-center gap-1.5 tracking-wider"><GraduationCap size={14} /> 八字助教 · Kimi K3</span>
                 <button onClick={() => setTutorOpen(false)}><X size={15} /></button>
               </div>
               <TutorPanel
@@ -692,7 +693,7 @@ export function BaziApp() {
             </section>
           ) : (
             <button onClick={() => setTutorOpen(true)}
-              className="fixed bottom-4 right-4 z-50 flex items-center gap-2 bg-[#5b6b9e] hover:bg-[#48578a] text-white text-sm font-bold rounded-full px-4 py-2.5 shadow-lg">
+              className="fixed bottom-4 right-4 z-50 btn-gold px-5 py-2.5 text-sm tracking-wider">
               <GraduationCap size={16} /> 问助教
             </button>
           )}

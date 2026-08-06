@@ -13,7 +13,7 @@ export function PaiPanBoard({ p }: { p: PaiPan }) {
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-sm" style={{ fontFamily: '"Songti SC","STSong",serif' }}>
         <thead>
-          <tr className="text-xs text-[#8d8670] border-b border-[#2e375c]">
+          <tr className="text-xs text-[#8d8670] border-b border-[#3a2f1e]">
             <th className="py-1.5 px-2 font-normal">六神</th>
             <th className="py-1.5 px-2 font-normal">伏神</th>
             <th className="py-1.5 px-2 font-normal text-left">本卦 · {p.benGua.info.name}</th>
@@ -25,9 +25,9 @@ export function PaiPanBoard({ p }: { p: PaiPan }) {
         </thead>
         <tbody>
           {rows.map((l) => (
-            <tr key={l.pos} className={`border-b border-[#232a49] ${l.shiYing === '世' ? 'bg-[#252c4e]' : ''}`}>
+            <tr key={l.pos} className={`border-b border-[#292219] ${l.shiYing === '世' ? 'bg-[#2c2417]' : ''}`}>
               <td className="py-2 px-2 text-[#a89f86] whitespace-nowrap">{l.liushen}</td>
-              <td className="py-2 px-2 whitespace-nowrap text-[#c9a05e]">
+              <td className="py-2 px-2 whitespace-nowrap text-[#d4b578]">
                 {l.fuShen ? `${l.fuShen.liuqin} ${l.fuShen.stem}${l.fuShen.branch}${l.fuShen.element}` : ''}
               </td>
               <td className="py-2 px-2 whitespace-nowrap">
@@ -40,11 +40,11 @@ export function PaiPanBoard({ p }: { p: PaiPan }) {
               </td>
               <td className="py-2 px-2 text-center">
                 {l.shiYing && (
-                  <span className={`inline-block w-6 h-6 leading-6 rounded-full text-xs font-bold ${l.shiYing === '世' ? 'bg-[#d0604d] text-white' : 'bg-[#5b6b9e] text-white'}`}>
+                  <span className={`inline-block w-6 h-6 leading-6 rounded-full text-xs font-bold ${l.shiYing === '世' ? 'bg-[#d0604d] text-white' : 'bg-[#c9a962] text-white'}`}>
                     {l.shiYing}
                   </span>
                 )}
-                {l.guashen && <span className="ml-1 text-xs text-[#c9a05e]" title="卦身">身</span>}
+                {l.guashen && <span className="ml-1 text-xs text-[#d4b578]" title="卦身">身</span>}
                 {l.jianYao && <span className="ml-1 text-xs text-[#8d8670]" title="间爻">间</span>}
               </td>
               <td className="py-2 px-2 whitespace-nowrap text-[#b0a78c]">

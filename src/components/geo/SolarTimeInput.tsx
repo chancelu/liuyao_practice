@@ -6,8 +6,7 @@ import { MapPin, Clock3 } from 'lucide-react';
 
 export interface PlaceSel { prov: number; city: number }
 
-const inputCls =
-  'border border-[#2e375c] rounded-md bg-[#11162b] px-2 py-2 text-sm text-[#e8e1cd] focus:outline-none focus:border-[#b08a44]';
+const inputCls = 'input-dark px-2 py-2';
 
 export function SolarTimeInput({
   date, setDate, time, setTime, place, setPlace,
@@ -69,12 +68,12 @@ export function SolarTimeInput({
 
       {/* 真太阳时换算明细 */}
       {info && (
-        <div className="rounded-md border border-[#b08a44]/30 bg-[#b08a44]/5 px-3 py-2 text-[11px] leading-relaxed">
+        <div className="rounded-md border border-[#c9a962]/30 bg-[#c9a962]/5 px-3 py-2 text-[11px] leading-relaxed">
           <div className="text-[#8d8670] space-y-0.5">
             <div>① 经度修正：{city.name} {city.lng}°E，距中央经线 120°E {city.lng >= 120 ? '偏东' : '偏西'} {Math.abs(city.lng - 120).toFixed(1)}° → <span className="text-[#d4b578]">{fmtMin(info.solar.lngMin)}</span>（每度 4 分钟）</div>
             <div>② 均时差：地球公转椭圆与黄赤交角所致 → <span className="text-[#d4b578]">{fmtMin(info.solar.eotMin)}</span></div>
           </div>
-          <div className="mt-1 pt-1 border-t border-[#b08a44]/20 text-xs">
+          <div className="mt-1 pt-1 border-t border-[#c9a962]/20 text-xs">
             真太阳时 <b className="text-[#ecdfc0]" style={{ fontFamily: '"Songti SC",serif' }}>{fmtTime(info.solar.corrected)}（{shichenName(info.solar.corrected)}）</b>
             <span className="text-[#8d8670]">　钟表 {fmtTime(info.beijing)}（{shichenName(info.beijing)}）</span>
             {branchChanged && (

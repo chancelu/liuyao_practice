@@ -73,8 +73,8 @@ export function LiuyaoApp() {
   return (
     <main className="max-w-7xl mx-auto px-4 py-5 grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-5 lg:flex-1 lg:min-h-0 lg:overflow-hidden w-full">
       {/* 左：输入（独立滚动） */}
-      <aside className="bg-[#151b31] border border-[#2e375c] rounded-lg p-4 lg:h-full lg:overflow-y-auto">
-        <h2 className="text-sm font-bold mb-3" style={{ fontFamily: '"Songti SC",serif' }}>一、起卦输入</h2>
+      <aside className="panel p-4 lg:h-full lg:overflow-y-auto">
+        <div className="section-head"><span className="num text-base">壹</span><span className="title">起卦输入</span></div>
         <InputPanel
           yaos={yaos} setYaos={setYaos}
           date={date} setDate={setDate}
@@ -90,18 +90,19 @@ export function LiuyaoApp() {
       <div className="space-y-5 min-w-0 lg:h-full lg:overflow-y-auto lg:pr-1">
         {result ? (
           <>
-            <section className="bg-[#151b31] border border-[#2e375c] rounded-lg p-4">
+            <section className="panel p-4">
               <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
-                <h2 className="text-sm font-bold" style={{ fontFamily: '"Songti SC",serif' }}>
-                  二、排盘 · {result.p.benGua.info.name}
-                  {result.p.bianGua ? ` 之 ${result.p.bianGua.info.name}` : '（六爻安静）'}
-                </h2>
+                <div className="section-head !mb-0">
+                  <span className="num text-base">贰</span>
+                  <span className="title">排盘 · {result.p.benGua.info.name}
+                  {result.p.bianGua ? ` 之 ${result.p.bianGua.info.name}` : '（六爻安静）'}</span>
+                </div>
                 <div className="text-xs text-[#8d8670]">
                   {result.p.ganzhi.year}年 {result.p.ganzhi.month}月 {result.p.ganzhi.day}日 {result.p.ganzhi.hour}时 · {result.p.kong.join('')}空
                 </div>
               </div>
               {question.trim() && (
-                <div className="mb-3 text-xs text-[#c8bd9c] bg-[#1d2440] border border-[#283050] rounded px-3 py-1.5">
+                <div className="mb-3 text-xs text-[#c8bd9c] bg-[#201a12] border border-[#32281a] rounded px-3 py-1.5">
                   <b>所问：</b>{question.trim()}
                   <span className="text-[#7d7663]">　·　类别：{result.it.category.label}（用神 {result.it.category.yongshen}爻）</span>
                 </div>
@@ -110,26 +111,26 @@ export function LiuyaoApp() {
             </section>
 
             <section>
-              <h2 className="text-sm font-bold mb-1" style={{ fontFamily: '"Songti SC",serif' }}>三、九步研习工作流</h2>
+              <div className="section-head !mb-1"><span className="num text-base">叁</span><span className="title">九步研习工作流</span></div>
               <p className="text-[10px] text-[#6f6a58] mb-3">每步三块内容：「这一步怎么推/想」绿色教学框 · 「规则·歌诀」黄色原文框 · 「依据」课程出处</p>
               <WorkflowSteps p={result.p} it={result.it} yaoNames={yaoNames} question={question} />
             </section>
 
             <section>
-              <h2 className="text-sm font-bold mb-3" style={{ fontFamily: '"Songti SC",serif' }}>四、必背歌诀速查（卷一/卷三/卷四）</h2>
+              <div className="section-head"><span className="num text-base">肆</span><span className="title">必背歌诀速查（卷一 / 卷三 / 卷四）</span></div>
               <GeyueReference />
             </section>
 
-            <footer className="text-[10px] text-[#6f6a58] leading-relaxed border-t border-[#2e375c] pt-3 pb-6">
+            <footer className="text-[10px] text-[#6f6a58] leading-relaxed border-t border-[#3a2f1e] pt-3 pb-6">
               说明：本工具排盘规则（纳甲、世应、六亲、六神、旬空、月破日破暗动、化进化退、伏神、卦身）与断卦总纲均出自六爻课程（卷一~卷四）教材；
               节气换月采用通用近似公式（误差±1天），交节当日请自行核对月建。六爻断事明阴阳、示吉凶，反映事物发展趋势，具体抉择还需结合现实条件（卷三·第三课：六爻有条件性、模糊性、阶段性）。
             </footer>
 
             {/* 全局助教 */}
             {tutorOpen ? (
-              <section className="fixed bottom-4 right-4 z-50 w-[380px] max-w-[92vw] shadow-2xl rounded-xl overflow-hidden border border-[#2e375c]">
-                <div className="flex items-center justify-between bg-[#5b6b9e] text-white px-3 py-2">
-                  <span className="text-xs font-bold flex items-center gap-1.5"><GraduationCap size={14} /> 六爻助教 · Kimi K3</span>
+              <section className="fixed bottom-4 right-4 z-50 w-[380px] max-w-[92vw] shadow-2xl rounded-xl overflow-hidden border border-[#c9a962]/30">
+                <div className="flex items-center justify-between bg-gradient-to-b from-[#e3c98a] to-[#b08d48] text-[#1a1408] px-3.5 py-2.5">
+                  <span className="text-xs font-bold flex items-center gap-1.5 tracking-wider"><GraduationCap size={14} /> 六爻助教 · Kimi K3</span>
                   <button onClick={() => setTutorOpen(false)}><X size={15} /></button>
                 </div>
                 <TutorPanel
@@ -141,7 +142,7 @@ export function LiuyaoApp() {
               </section>
             ) : (
               <button onClick={() => setTutorOpen(true)}
-                className="fixed bottom-4 right-4 z-50 flex items-center gap-2 bg-[#5b6b9e] hover:bg-[#48578a] text-white text-sm font-bold rounded-full px-4 py-2.5 shadow-lg">
+                className="fixed bottom-4 right-4 z-50 btn-gold px-5 py-2.5 text-sm tracking-wider">
                 <GraduationCap size={16} /> 问助教
               </button>
             )}

@@ -27,7 +27,7 @@ const STEPS: Step[] = [
 /** 课程依据框 */
 function Basis({ text }: { text: string }) {
   return (
-    <div className="mt-2 flex gap-1.5 items-start text-xs text-[#8d8670] bg-[#1d2440] border border-[#283050] rounded px-2 py-1.5">
+    <div className="mt-2 flex gap-1.5 items-start text-xs text-[#8d8670] bg-[#201a12] border border-[#32281a] rounded px-2 py-1.5">
       <BookOpen size={12} className="mt-0.5 shrink-0" />
       <span><span className="font-semibold">依据：</span>{text}</span>
     </div>
@@ -49,8 +49,8 @@ function Teach({ title, children }: { title: string; children: React.ReactNode }
 /** 规则歌诀框 */
 function Rule({ text, note }: { text: string; note?: string }) {
   return (
-    <div className="mt-2 border border-[#474025] bg-[#1d2440] rounded px-3 py-2">
-      <div className="flex items-center gap-1.5 text-xs font-bold text-[#c9a05e] mb-0.5">
+    <div className="mt-2 border border-[#474025] bg-[#201a12] rounded px-3 py-2">
+      <div className="flex items-center gap-1.5 text-xs font-bold text-[#d4b578] mb-0.5">
         <ScrollText size={12} /> 规则 · 歌诀
       </div>
       <div className="text-xs text-[#d4c294] leading-relaxed" style={{ fontFamily: '"Songti SC",serif' }}>{text}</div>
@@ -63,13 +63,13 @@ function StepCard({ step, open, onToggle, children, ask }: { step: Step; open: b
   return (
     <div className="relative pl-12 pb-6">
       <div className="absolute left-0 top-0 bottom-0 flex flex-col items-center">
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 ${open ? 'bg-[#d0604d] text-white border-[#d0604d]' : 'bg-[#11162b] text-[#d0604d] border-[#d0604d]'}`}
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${open ? 'bg-gradient-to-b from-[#e3c98a] to-[#b08d48] text-[#1a1408] shadow-[0_0_14px_rgba(201,169,98,0.4)]' : 'bg-[#131008] text-[#c9a962] border border-[#c9a962]/50'}`}
           style={{ fontFamily: '"Songti SC",serif' }}>
           {step.no}
         </div>
-        {step.no < 9 && <div className="w-0.5 flex-1 bg-[#2e375c] mt-1" />}
+        {step.no < 9 && <div className="w-0.5 flex-1 bg-[#3a2f1e] mt-1" />}
       </div>
-      <div className={`border rounded-lg transition-colors ${open ? 'border-[#b08a44] bg-[#11162b] shadow-sm' : 'border-[#283050] bg-[#1a2140]'}`}>
+      <div className={`border rounded-xl transition-colors ${open ? 'border-[#c9a962]/45 bg-[#131008] shadow-[0_8px_28px_rgba(0,0,0,0.35)]' : 'border-[#c9a962]/12 bg-[#1d1912]/70'}`}>
         <button onClick={onToggle} className="w-full flex items-center justify-between px-4 py-3 text-left">
           <div>
             <span className="font-bold text-[#e8e1cd]" style={{ fontFamily: '"Songti SC",serif' }}>{step.title}</span>
@@ -138,7 +138,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
           <div className="flex-1 min-w-[220px]">
             <table className="text-xs border-collapse w-full">
               <thead>
-                <tr className="text-[#8d8670] border-b border-[#283050]">
+                <tr className="text-[#8d8670] border-b border-[#32281a]">
                   <th className="text-left py-1 font-normal">爻位</th>
                   <th className="text-left font-normal">掷得</th>
                   <th className="text-left font-normal">定爻</th>
@@ -147,7 +147,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
               </thead>
               <tbody>
                 {p.lines.map((l) => (
-                  <tr key={l.pos} className="border-b border-[#232a49]">
+                  <tr key={l.pos} className="border-b border-[#292219]">
                     <td className="py-1">{l.posName}爻</td>
                     <td>{yaoNames[l.pos - 1]}</td>
                     <td>{l.yang ? '阳爻 ⚊' : '阴爻 ⚋'}</td>
@@ -171,7 +171,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
       <StepCard step={STEPS[1]} open={isOpen(2)} onToggle={() => toggle(2)} ask={askFor(2)}>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
           {[['年柱', g.year, '以立春分岁'], ['月柱', g.month, `以${g.jieqi}节换月`], ['日柱', g.day, '历算推日'], ['时柱', g.hour, '五鼠遁起时']].map(([k, v, n]) => (
-            <div key={k} className="text-center border border-[#283050] rounded py-2 bg-[#1a2140]">
+            <div key={k} className="text-center border border-[#32281a] rounded py-2 bg-[#1d1912]">
               <div className="text-xs text-[#8d8670]">{k}</div>
               <div className="text-xl font-bold" style={{ fontFamily: '"Songti SC",serif' }}>{v}</div>
               <div className="text-[10px] text-[#6f6a58]">{n}</div>
@@ -204,7 +204,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
         <div className="overflow-x-auto">
           <div className="flex gap-1 min-w-max">
             {walk.map((s) => (
-              <div key={s.seq} className={`flex flex-col items-center border rounded px-2 py-1.5 text-[10px] w-[86px] ${s.isTarget ? 'border-[#d0604d] bg-[#2a1d20] font-bold' : 'border-[#283050] bg-[#1a2140] text-[#8d8670]'}`}>
+              <div key={s.seq} className={`flex flex-col items-center border rounded px-2 py-1.5 text-[10px] w-[86px] ${s.isTarget ? 'border-[#d0604d] bg-[#2a1d20] font-bold' : 'border-[#32281a] bg-[#1d1912] text-[#8d8670]'}`}>
                 <span className={s.isTarget ? 'text-[#d0604d]' : ''}>{s.name}</span>
                 <span>{s.seqName}</span>
                 <span>世{POS_N[s.shiPos]}</span>
@@ -226,7 +226,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
       <StepCard step={STEPS[3]} open={isOpen(4)} onToggle={() => toggle(4)} ask={askFor(4)}>
         <table className="text-xs border-collapse mb-2">
           <thead>
-            <tr className="text-[#8d8670] border-b border-[#283050]">
+            <tr className="text-[#8d8670] border-b border-[#32281a]">
               <th className="text-left py-1 pr-3 font-normal">爻位</th>
               <th className="text-left pr-3 font-normal">所属</th>
               <th className="text-left pr-3 font-normal">纳干支</th>
@@ -235,7 +235,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
           </thead>
           <tbody>
             {[...p.lines].reverse().map((l) => (
-              <tr key={l.pos} className="border-b border-[#232a49]">
+              <tr key={l.pos} className="border-b border-[#292219]">
                 <td className="py-1 pr-3">{l.posName}爻</td>
                 <td className="pr-3">{l.pos <= 3 ? `内卦${p.benGua.lower}` : `外卦${p.benGua.upper}`}</td>
                 <td className="pr-3 font-semibold">{l.stem}{l.branch}</td>
@@ -257,7 +257,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
       <StepCard step={STEPS[4]} open={isOpen(5)} onToggle={() => toggle(5)} ask={askFor(5)}>
         <table className="text-xs border-collapse mb-2 w-full">
           <thead>
-            <tr className="text-[#8d8670] border-b border-[#283050]">
+            <tr className="text-[#8d8670] border-b border-[#32281a]">
               <th className="text-left py-1 font-normal">爻位</th>
               <th className="text-left font-normal">推演（宫{p.palaceElement}为我）</th>
               <th className="text-left font-normal">六亲</th>
@@ -266,7 +266,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
           </thead>
           <tbody>
             {[...p.lines].reverse().map((l) => (
-              <tr key={l.pos} className="border-b border-[#232a49]">
+              <tr key={l.pos} className="border-b border-[#292219]">
                 <td className="py-1">{l.posName}爻</td>
                 <td className="text-[#b0a78c]">{l.branch}{l.element} · {REL_TEXT[elemRelation(p.palaceElement, l.element)]}</td>
                 <td className="font-semibold">{l.liuqin}</td>
@@ -306,7 +306,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
       <StepCard step={STEPS[6]} open={isOpen(7)} onToggle={() => toggle(7)} ask={askFor(7)}>
         <p className="mb-1">测事类别：<b>{it.category.label}</b> → 主用神：<b>{it.category.yongshen === '世' ? '世爻' : it.category.yongshen === '应' ? '应爻' : `${it.category.yongshen}爻`}</b></p>
         <p className="mb-1">{it.candidatesNote}</p>
-        {it.fuNote && <p className="mb-1 text-[#c9a05e]">{it.fuNote}</p>}
+        {it.fuNote && <p className="mb-1 text-[#d4b578]">{it.fuNote}</p>}
         {it.category.fuShenAux && it.category.fuShenAux.length > 0 && (
           <p className="text-xs text-[#8d8670]">辅用神：{it.category.fuShenAux.join('、')}——主用神定吉凶，辅用神供取象参考。</p>
         )}
@@ -381,7 +381,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
           <p className="text-[#d4b578]">切记：六爻明阴阳、示吉凶，反映的是一定坐标基础上的发展趋势，不可无条件妄断铁口（卷三·第三课）。</p>
         </Teach>
         {/* 卦义佐证 */}
-        <div className="border-t border-[#283050] pt-2 mt-2 text-xs space-y-1.5">
+        <div className="border-t border-[#32281a] pt-2 mt-2 text-xs space-y-1.5">
           <div><b>卦辞：</b>{p.benGua.info.guaci || p.benGua.info.yi}</div>
           <div><b>卦意：</b>{p.benGua.info.yi}</div>
           <div><b>卦析：</b>{p.benGua.info.xi}</div>
@@ -400,7 +400,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
 
 function ParamItem({ name, def, result }: { name: string; def: string; result: string }) {
   return (
-    <div className="border border-[#283050] rounded px-2.5 py-2 bg-[#1a2140]">
+    <div className="border border-[#32281a] rounded px-2.5 py-2 bg-[#1d1912]">
       <div className="font-semibold text-[#e8e1cd]">{name} <span className="font-normal text-[#6f6a58]">（{def}）</span></div>
       <div className="mt-0.5 text-[#b0a78c]">{result}</div>
     </div>

@@ -4,34 +4,34 @@
 
 @layer base {
   :root {
-    --background: 228 32% 7%;
+    --background: 36 14% 5%;
     --foreground: 45 30% 86%;
-    --card: 228 30% 10%;
+    --card: 36 14% 7%;
     --card-foreground: 45 30% 86%;
-    --popover: 228 30% 10%;
+    --popover: 36 14% 7%;
     --popover-foreground: 45 30% 86%;
-    --primary: 40 45% 48%;
-    --primary-foreground: 45 40% 95%;
-    --secondary: 228 25% 16%;
+    --primary: 42 45% 54%;
+    --primary-foreground: 40 40% 8%;
+    --secondary: 36 18% 12%;
     --secondary-foreground: 45 25% 80%;
-    --muted: 228 25% 16%;
+    --muted: 36 18% 12%;
     --muted-foreground: 45 12% 55%;
-    --accent: 228 25% 18%;
+    --accent: 36 20% 14%;
     --accent-foreground: 45 30% 86%;
     --destructive: 8 55% 55%;
     --destructive-foreground: 0 0% 98%;
-    --border: 228 22% 20%;
-    --input: 228 22% 20%;
-    --ring: 40 45% 48%;
+    --border: 36 20% 16%;
+    --input: 36 20% 16%;
+    --ring: 42 45% 54%;
     --radius: 0.625rem;
-    --sidebar-background: 228 30% 9%;
+    --sidebar-background: 36 16% 6%;
     --sidebar-foreground: 45 25% 80%;
-    --sidebar-primary: 40 45% 48%;
-    --sidebar-primary-foreground: 45 40% 95%;
-    --sidebar-accent: 228 25% 16%;
+    --sidebar-primary: 42 45% 54%;
+    --sidebar-primary-foreground: 40 40% 8%;
+    --sidebar-accent: 36 18% 12%;
     --sidebar-accent-foreground: 45 25% 80%;
-    --sidebar-border: 228 22% 18%;
-    --sidebar-ring: 40 45% 48%;
+    --sidebar-border: 36 18% 14%;
+    --sidebar-ring: 42 45% 54%;
   }
 }
 
@@ -41,50 +41,49 @@
   }
 
   html {
-    background: #0b0e1a;
+    background: #0c0a07;
   }
 
   body {
     @apply text-foreground;
-    /* 夜幕底色 + 星野 + 紫微光晕 */
+    /* 宣纸夜幕底色 + 疏星 + 紫微光晕（星点刻意稀疏克制，贵在留白） */
     background:
-      radial-gradient(1px 1px at 12% 18%, rgba(255, 246, 214, 0.55) 50%, transparent 51%),
-      radial-gradient(1px 1px at 28% 64%, rgba(255, 246, 214, 0.35) 50%, transparent 51%),
-      radial-gradient(1.5px 1.5px at 43% 9%, rgba(255, 246, 214, 0.45) 50%, transparent 51%),
-      radial-gradient(1px 1px at 57% 38%, rgba(255, 246, 214, 0.3) 50%, transparent 51%),
-      radial-gradient(1.5px 1.5px at 71% 22%, rgba(255, 246, 214, 0.5) 50%, transparent 51%),
-      radial-gradient(1px 1px at 83% 55%, rgba(255, 246, 214, 0.35) 50%, transparent 51%),
-      radial-gradient(1px 1px at 91% 82%, rgba(255, 246, 214, 0.4) 50%, transparent 51%),
-      radial-gradient(1px 1px at 7% 79%, rgba(255, 246, 214, 0.3) 50%, transparent 51%),
-      radial-gradient(1.5px 1.5px at 36% 88%, rgba(255, 246, 214, 0.35) 50%, transparent 51%),
-      radial-gradient(1px 1px at 65% 74%, rgba(255, 246, 214, 0.3) 50%, transparent 51%),
-      radial-gradient(ellipse 70% 45% at 50% -10%, rgba(96, 76, 160, 0.22), transparent 70%),
-      radial-gradient(ellipse 55% 40% at 85% 110%, rgba(176, 138, 68, 0.10), transparent 70%),
-      linear-gradient(180deg, #0b0e1a 0%, #0d1020 55%, #0b0e1a 100%);
+      radial-gradient(1px 1px at 11% 16%, rgba(243, 226, 184, 0.5) 50%, transparent 51%),
+      radial-gradient(1px 1px at 27% 68%, rgba(243, 226, 184, 0.28) 50%, transparent 51%),
+      radial-gradient(1.4px 1.4px at 44% 8%, rgba(243, 226, 184, 0.4) 50%, transparent 51%),
+      radial-gradient(1px 1px at 59% 41%, rgba(243, 226, 184, 0.22) 50%, transparent 51%),
+      radial-gradient(1.4px 1.4px at 72% 19%, rgba(243, 226, 184, 0.45) 50%, transparent 51%),
+      radial-gradient(1px 1px at 86% 57%, rgba(243, 226, 184, 0.3) 50%, transparent 51%),
+      radial-gradient(1px 1px at 93% 84%, rgba(243, 226, 184, 0.34) 50%, transparent 51%),
+      radial-gradient(1px 1px at 6% 81%, rgba(243, 226, 184, 0.24) 50%, transparent 51%),
+      radial-gradient(1.3px 1.3px at 35% 91%, rgba(243, 226, 184, 0.3) 50%, transparent 51%),
+      radial-gradient(ellipse 75% 42% at 50% -12%, rgba(120, 96, 170, 0.16), transparent 70%),
+      radial-gradient(ellipse 60% 42% at 88% 112%, rgba(201, 169, 98, 0.09), transparent 70%),
+      linear-gradient(180deg, #0c0a07 0%, #100d09 52%, #0c0a07 100%);
     background-attachment: fixed;
     min-height: 100vh;
   }
 
   ::selection {
-    background: rgba(176, 138, 68, 0.35);
+    background: rgba(201, 169, 98, 0.32);
     color: #f4ecd8;
   }
 
-  /* 暗色细滚动条 */
+  /* 暗色鎏金细滚动条 */
   * {
     scrollbar-width: thin;
-    scrollbar-color: #2e375c transparent;
+    scrollbar-color: #3a2f1e transparent;
   }
   *::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
   *::-webkit-scrollbar-thumb {
-    background: #2e375c;
+    background: #3a2f1e;
     border-radius: 4px;
   }
   *::-webkit-scrollbar-thumb:hover {
-    background: #3d4a75;
+    background: #57452a;
   }
   *::-webkit-scrollbar-track {
     background: transparent;
@@ -93,7 +92,104 @@
   /* 日期/时间输入框的日历图标在暗底下反白 */
   input[type='date']::-webkit-calendar-picker-indicator,
   input[type='time']::-webkit-calendar-picker-indicator {
-    filter: invert(0.75) sepia(0.3) saturate(2);
+    filter: invert(0.72) sepia(0.35) saturate(1.8);
     cursor: pointer;
+  }
+
+  select option {
+    background: #17140f;
+    color: #e8e1cd;
+  }
+}
+
+@layer components {
+  /* —— 墨色鎏金组件语汇 —— */
+
+  /* 主面板：半透明墨底 + 鎏金发丝边 + 内高光 */
+  .panel {
+    @apply rounded-xl backdrop-blur-sm;
+    background: rgba(23, 20, 15, 0.68);
+    border: 1px solid rgba(201, 169, 98, 0.16);
+    box-shadow:
+      inset 0 1px 0 rgba(243, 226, 184, 0.04),
+      0 14px 36px rgba(0, 0, 0, 0.38);
+  }
+
+  /* 内嵌卡片：更深一度 */
+  .panel-inset {
+    @apply rounded-lg;
+    background: rgba(18, 15, 10, 0.62);
+    border: 1px solid rgba(201, 169, 98, 0.1);
+  }
+
+  /* 章节眉标：小字宽距 */
+  .eyebrow {
+    @apply text-[10px] font-semibold tracking-[0.38em];
+    color: #8a7d5f;
+  }
+
+  /* 章节标题行：眉标 + 宋体大字 + 发丝线 */
+  .section-head {
+    @apply flex items-baseline gap-3 mb-3;
+  }
+  .section-head .num {
+    font-family: "Songti SC", "STSong", "SimSun", serif;
+    color: #c9a962;
+    text-shadow: 0 0 18px rgba(201, 169, 98, 0.4);
+  }
+  .section-head .title {
+    @apply text-sm font-bold tracking-[0.18em];
+    font-family: "Songti SC", "STSong", "SimSun", serif;
+    color: #ecdfc0;
+  }
+  .section-head::after {
+    content: '';
+    @apply flex-1 h-px self-center;
+    background: linear-gradient(to right, rgba(201, 169, 98, 0.28), transparent);
+  }
+
+  /* 输入控件 */
+  .input-dark {
+    @apply rounded-lg px-3 py-2 text-sm transition-colors;
+    background: rgba(15, 13, 9, 0.8);
+    border: 1px solid rgba(201, 169, 98, 0.18);
+    color: #e8e1cd;
+  }
+  .input-dark::placeholder {
+    color: #6b6353;
+  }
+  .input-dark:focus {
+    outline: none;
+    border-color: rgba(201, 169, 98, 0.55);
+    box-shadow: 0 0 0 3px rgba(201, 169, 98, 0.08);
+  }
+
+  /* 主按钮：鎏金渐变 */
+  .btn-gold {
+    @apply inline-flex items-center gap-1.5 rounded-full font-bold transition;
+    background: linear-gradient(to bottom, #e3c98a, #b08d48);
+    color: #1a1408;
+    box-shadow: 0 2px 16px rgba(201, 169, 98, 0.28);
+  }
+  .btn-gold:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+  .btn-gold:disabled {
+    @apply opacity-30;
+  }
+
+  /* 幽灵按钮：鎏金描边 */
+  .btn-ghost {
+    @apply inline-flex items-center gap-1.5 rounded-full transition-colors;
+    border: 1px solid rgba(201, 169, 98, 0.32);
+    color: #c9a962;
+    background: transparent;
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: rgba(201, 169, 98, 0.1);
+    border-color: rgba(201, 169, 98, 0.55);
+  }
+  .btn-ghost:disabled {
+    @apply opacity-40;
   }
 }

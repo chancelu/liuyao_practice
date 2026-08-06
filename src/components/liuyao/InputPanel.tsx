@@ -75,7 +75,7 @@ export function InputPanel({
         <select
           value={activeExample}
           onChange={(e) => onLoadExample(e.target.value)}
-          className="w-full border border-[#2e375c] rounded-md bg-[#11162b] px-3 py-2 text-sm text-[#e8e1cd] focus:outline-none focus:border-[#d0604d]"
+          className="w-full border border-[#3a2f1e] rounded-md bg-[#131008] px-3 py-2 text-sm text-[#e8e1cd] focus:outline-none focus:border-[#c9a962]/60"
           style={{ fontFamily: '"Songti SC",serif' }}
         >
           <option value="">— 自选卦象（手动录入/摇卦）—</option>
@@ -84,7 +84,7 @@ export function InputPanel({
           ))}
         </select>
         {current && (
-          <div className="mt-1.5 text-[10px] leading-relaxed text-[#a89f86] bg-[#1d2440] border border-[#283050] rounded px-2 py-1.5">
+          <div className="mt-1.5 text-[10px] leading-relaxed text-[#a89f86] bg-[#201a12] border border-[#32281a] rounded px-2 py-1.5">
             <b>学习要点：</b>{current.point}
             <div className="text-[#7d7663] mt-0.5">出处：{current.source}</div>
           </div>
@@ -99,12 +99,12 @@ export function InputPanel({
           onChange={(e) => { setQuestion(e.target.value); setClassifyMsg(null); }}
           rows={2}
           placeholder="如：下个月那场面试能通过吗？/ 借出去的钱年底能要回来吗？"
-          className="w-full border border-[#2e375c] rounded-md bg-[#11162b] px-3 py-2 text-sm text-[#e8e1cd] focus:outline-none focus:border-[#d0604d] resize-none"
+          className="w-full border border-[#3a2f1e] rounded-md bg-[#131008] px-3 py-2 text-sm text-[#e8e1cd] focus:outline-none focus:border-[#c9a962]/60 resize-none"
         />
         <button
           onClick={aiClassify}
           disabled={classifying || !question.trim()}
-          className="mt-1.5 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-[#5b6b9e] text-white disabled:opacity-40 hover:bg-[#48578a]"
+          className="mt-1.5 btn-gold text-xs px-3.5 py-1.5"
         >
           {classifying ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
           AI 定用神（Kimi K3 归类）
@@ -123,7 +123,7 @@ export function InputPanel({
           <select
             value={category}
             onChange={(e) => { setCategory(e.target.value); setClassifyMsg(null); }}
-            className="w-full border border-[#2e375c] rounded-md bg-[#11162b] px-3 py-1.5 text-xs text-[#e8e1cd] focus:outline-none focus:border-[#d0604d]"
+            className="w-full border border-[#3a2f1e] rounded-md bg-[#131008] px-3 py-1.5 text-xs text-[#e8e1cd] focus:outline-none focus:border-[#c9a962]/60"
           >
             {QUESTION_CATEGORIES.map((c) => (
               <option key={c.id} value={c.id}>{c.label}</option>
@@ -149,11 +149,11 @@ export function InputPanel({
           <label className="text-xs font-semibold text-[#c8bd9c]">六爻卦象（自初爻向上录入）</label>
           <div className="flex gap-1">
             <button onClick={randomCast} title="模拟摇卦"
-              className="flex items-center gap-1 text-xs px-2 py-1 rounded border border-[#2e375c] text-[#d4b578] hover:bg-[#252c4e]">
+              className="btn-ghost text-xs px-2.5 py-1">
               <Dices size={12} /> 摇卦
             </button>
             <button onClick={() => setYaos([7, 7, 7, 7, 7, 7])} title="重置"
-              className="flex items-center gap-1 text-xs px-2 py-1 rounded border border-[#2e375c] text-[#d4b578] hover:bg-[#252c4e]">
+              className="btn-ghost text-xs px-2.5 py-1">
               <RotateCcw size={12} /> 重置
             </button>
           </div>
@@ -162,7 +162,7 @@ export function InputPanel({
           {[...yaos].map((_, ri) => {
             const i = 5 - ri; // 上爻在上显示
             return (
-              <div key={i} className="flex items-center gap-2 border border-[#283050] rounded-md px-2 py-1.5 bg-[#1a2140]">
+              <div key={i} className="flex items-center gap-2 border border-[#32281a] rounded-md px-2 py-1.5 bg-[#1d1912]">
                 <span className="text-xs text-[#8d8670] w-20 shrink-0">{POS[i]}</span>
                 <div className="grid grid-cols-4 gap-1 flex-1">
                   {VALUES.map((v) => {
@@ -179,7 +179,7 @@ export function InputPanel({
                         className={`flex flex-col items-center py-1 rounded border text-[10px] leading-tight transition-colors ${
                           active
                             ? 'border-[#d0604d] bg-[#d0604d] text-white'
-                            : 'border-[#2e375c] bg-[#11162b] text-[#b0a78c] hover:border-[#d0604d]'
+                            : 'border-[#3a2f1e] bg-[#131008] text-[#b0a78c] hover:border-[#d0604d]'
                         }`}
                       >
                         <span className={active ? 'text-white' : 'text-[#e8e1cd]'}>
