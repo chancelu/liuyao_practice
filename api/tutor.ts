@@ -3,6 +3,13 @@
 export const config = { runtime: 'edge' };
 
 export default async function handler(req: Request): Promise<Response> {
+  // GET：探测服务端是否已配置 KIMI_API_KEY（前端据此隐藏填 Key 框）
+  if (req.method === 'GET') {
+    return new Response(JSON.stringify({ serverKey: !!process.env.KIMI_API_KEY }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
+    });
+  }
   if (req.method !== 'POST') {
     return new Response('Method Not Allowed', { status: 405 });
   }

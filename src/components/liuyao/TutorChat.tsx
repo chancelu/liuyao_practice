@@ -230,6 +230,17 @@ export function TutorPanel({
   const [hasKey, setHasKey] = useState(() => !!getTutorKey());
   const [keyInput, setKeyInput] = useState('');
   const [showKeyBox, setShowKeyBox] = useState(false);
+  // 服务端（站长环境变量）是否已配置 Key：已配置且用户未自填时不显示输入框
+  const [serverKey, setServerKey] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetch('/api/tutor', { method: 'GET' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { if (alive && j) setServerKey(!!j.serverKey); })
+      .catch(() => { if (alive) setServerKey(false); });
+    return () => { alive = false; };
+  }, []);
 
   const saveKey = () => {
     const k = keyInput.trim();
@@ -258,6 +269,13 @@ export function TutorPanel({
             </button>
           </span>
         </div>
+      ) : serverKey && !showKeyBox ? (
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1 text-[11px] text-emerald-400">
+            <KeyRound size={12} /> 助教已就绪 · 站点已统一配置 Kimi Key
+          </span>
+          <button onClick={() => setShowKeyBox(true)} className="text-[11px] text-[#5b6b9e] hover:underline">使用自己的 Key</button>
+        </div>
       ) : (
         <div>
           <div className="flex items-center gap-1.5">
@@ -274,9 +292,12 @@ export function TutorPanel({
               className="text-xs px-2 py-1 rounded bg-[#5b6b9e] text-white disabled:opacity-40 hover:bg-[#48578a]">
               保存
             </button>
+            {serverKey && (
+              <button onClick={() => setShowKeyBox(false)} className="text-[11px] text-[#76829c] hover:underline shrink-0">取消</button>
+            )}
           </div>
           <p className="mt-1 text-[10px] text-[#76829c] leading-snug">
-            Key 只保存在你本机浏览器的 localStorage，随请求头发给服务器代理，不会写入任何文件或代码仓库（到 kimi.com 控制台获取）。若站长已在服务器配置 KIMI_API_KEY，则无需填写，直接提问即可。
+            Key 只保存在你本机浏览器的 localStorage，随请求头发给服务器代理，不会写入任何文件或代码仓库（到 kimi.com 控制台获取）。{serverKey ? '站点已配置环境变量 KIMI_API_KEY，不填也能直接提问。' : '若站长已在服务器配置 KIMI_API_KEY，则无需填写，直接提问即可。'}
           </p>
         </div>
       )}

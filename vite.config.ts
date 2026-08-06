@@ -12,6 +12,14 @@ function kimiTutorProxy(envKey: string): Plugin {
     name: "kimi-tutor-proxy",
     configureServer(server) {
       server.middlewares.use("/api/tutor", (req, res) => {
+        // GET：探测服务端是否已配置 KIMI_API_KEY（前端据此隐藏填 Key 框）
+        if (req.method === "GET") {
+          res.statusCode = 200
+          res.setHeader("Content-Type", "application/json; charset=utf-8")
+          res.setHeader("Cache-Control", "no-store")
+          res.end(JSON.stringify({ serverKey: !!envKey }))
+          return
+        }
         if (req.method !== "POST") {
           res.statusCode = 405
           res.end("Method Not Allowed")
