@@ -147,6 +147,20 @@ function shenshaOfPillar(stem: string, branch: string, isDayPillar: boolean, c: 
   return out;
 }
 
+/** 十天干性情（《滴天髓》论天干本性，教学一句话版） */
+export const STEM_NATURE: Record<string, string> = {
+  甲: '参天大树——耿直向上、有担当、宁折不弯，是栋梁之材，喜修剪（金）成器',
+  乙: '花草藤蔓——柔韧善附、随机应变，能屈能伸，借他山之石而上',
+  丙: '太阳之火——光明磊落、热情外放，普照万物而不择人，光芒难掩',
+  丁: '灯烛之火——文明之象、外柔内明，星星之火可以燎原，重精神专注',
+  戊: '高山城墙之土——厚重守信、稳如泰山，能载物挡水，略显固执',
+  己: '田园之土——包容滋养、善于培育，卑湿之地反能生金长木，韧性十足',
+  庚: '刀剑矿石之金——刚锐果决、讲义气，须经火炼方成利器，性急好胜',
+  辛: '珠玉首饰之金——精致敏感、外柔内刚，爱美重体面，喜壬水淘洗',
+  壬: '江河湖海之水——奔流不息、智谋奔放，量大能容，亦有泛滥之虞',
+  癸: '雨露溪流之水——细腻渗透、内藏机锋，润物无声，柔中见深远',
+};
+
 // ============ 月令取格（《子平真诠》） ============
 export interface GejuResult {
   name: string;      // 正官格 / 七杀格 / 建禄格……
@@ -210,22 +224,22 @@ export interface RelationItem {
   tone: 'good' | 'bad' | 'neutral';
 }
 
-const LIU_CHONG: Record<string, string> = { 子: '午', 午: '子', 丑: '未', 未: '丑', 寅: '申', 申: '寅', 卯: '酉', 酉: '卯', 辰: '戌', 戌: '辰', 巳: '亥', 亥: '巳' };
-const LIU_HE: Record<string, [string, string]> = { // 六合 → [对方, 合化五行]
+export const LIU_CHONG: Record<string, string> = { 子: '午', 午: '子', 丑: '未', 未: '丑', 寅: '申', 申: '寅', 卯: '酉', 酉: '卯', 辰: '戌', 戌: '辰', 巳: '亥', 亥: '巳' };
+export const LIU_HE: Record<string, [string, string]> = { // 六合 → [对方, 合化五行]
   子: ['丑', '土'], 丑: ['子', '土'], 寅: ['亥', '木'], 亥: ['寅', '木'], 卯: ['戌', '火'], 戌: ['卯', '火'],
   辰: ['酉', '金'], 酉: ['辰', '金'], 巳: ['申', '水'], 申: ['巳', '水'], 午: ['未', '土'], 未: ['午', '土'],
 };
-const LIU_HAI: Record<string, string> = { 子: '未', 未: '子', 丑: '午', 午: '丑', 寅: '巳', 巳: '寅', 卯: '辰', 辰: '卯', 申: '亥', 亥: '申', 酉: '戌', 戌: '酉' };
-const LIU_PO: Record<string, string> = { 子: '酉', 酉: '子', 丑: '辰', 辰: '丑', 寅: '亥', 亥: '寅', 卯: '午', 午: '卯', 巳: '申', 申: '巳', 未: '戌', 戌: '未' };
-const XING_PAIR: Record<string, [string, string]> = { // 相刑 → [对方, 刑名]
+export const LIU_HAI: Record<string, string> = { 子: '未', 未: '子', 丑: '午', 午: '丑', 寅: '巳', 巳: '寅', 卯: '辰', 辰: '卯', 申: '亥', 亥: '申', 酉: '戌', 戌: '酉' };
+export const LIU_PO: Record<string, string> = { 子: '酉', 酉: '子', 丑: '辰', 辰: '丑', 寅: '亥', 亥: '寅', 卯: '午', 午: '卯', 巳: '申', 申: '巳', 未: '戌', 戌: '未' };
+export const XING_PAIR: Record<string, [string, string]> = { // 相刑 → [对方, 刑名]
   寅: ['巳', '恃势之刑'], 巳: ['申', '恃势之刑'], 申: ['寅', '恃势之刑'],
   丑: ['戌', '无恩之刑'], 戌: ['未', '无恩之刑'], 未: ['丑', '无恩之刑'],
   子: ['卯', '无礼之刑'], 卯: ['子', '无礼之刑'],
 };
-const ZI_XING = ['辰', '午', '酉', '亥'];
-const TIAN_GAN_HE: Record<string, [string, string]> = { 甲: ['己', '土'], 己: ['甲', '土'], 乙: ['庚', '金'], 庚: ['乙', '金'], 丙: ['辛', '水'], 辛: ['丙', '水'], 丁: ['壬', '木'], 壬: ['丁', '木'], 戊: ['癸', '火'], 癸: ['戊', '火'] };
-const SANHE_JU: [string[], string][] = [[['申', '子', '辰'], '水'], [['寅', '午', '戌'], '火'], [['巳', '酉', '丑'], '金'], [['亥', '卯', '未'], '木']];
-const SANHUI_FANG: [string[], string][] = [[['寅', '卯', '辰'], '木（东方）'], [['巳', '午', '未'], '火（南方）'], [['申', '酉', '戌'], '金（西方）'], [['亥', '子', '丑'], '水（北方）']];
+export const ZI_XING = ['辰', '午', '酉', '亥'];
+export const TIAN_GAN_HE: Record<string, [string, string]> = { 甲: ['己', '土'], 己: ['甲', '土'], 乙: ['庚', '金'], 庚: ['乙', '金'], 丙: ['辛', '水'], 辛: ['丙', '水'], 丁: ['壬', '木'], 壬: ['丁', '木'], 戊: ['癸', '火'], 癸: ['戊', '火'] };
+export const SANHE_JU: [string[], string][] = [[['申', '子', '辰'], '水'], [['寅', '午', '戌'], '火'], [['巳', '酉', '丑'], '金'], [['亥', '卯', '未'], '木']];
+export const SANHUI_FANG: [string[], string][] = [[['寅', '卯', '辰'], '木（东方）'], [['巳', '午', '未'], '火（南方）'], [['申', '酉', '戌'], '金（西方）'], [['亥', '子', '丑'], '水（北方）']];
 
 /** 柱位组合的人事含义（教学简版） */
 const POSITION_MEANING: Record<string, string> = {
@@ -284,6 +298,15 @@ export function analyzeRelations(pillars: PillarInfo[]): RelationItem[] {
     }
   }
 
+  // —— 伏吟（同干支/同支重现，自刑四支除外） ——
+  for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) {
+    if (pillars[i].gz === pillars[j].gz) {
+      items.push({ kind: '伏吟', pair: `${bs[i].pos}柱${pillars[i].gz} × ${bs[j].pos}柱${pillars[j].gz}`, tone: 'bad', detail: `干支伏吟——「反吟伏吟，泪吟吟」，同柱重现主事情反复、迁延、内心呻吟难安；伏吟之柱所主宫位的人事易有波折（《三命通会》）。` });
+    } else if (bs[i].branch === bs[j].branch && !ZI_XING.includes(bs[i].branch)) {
+      items.push({ kind: '伏吟', pair: `${bs[i].pos}支${bs[i].branch} × ${bs[j].pos}支${bs[j].branch}`, tone: 'neutral', detail: `地支伏吟——同支重现，主该五行之气偏重、事情缠绵反复；若逢岁运再值此支，则为「伏吟逢值」，多应变动。` });
+    }
+  }
+
   // —— 三合局 / 半合 ——
   const branchList = bs.map((x) => x.branch);
   for (const [members, elem] of SANHE_JU) {
@@ -305,7 +328,7 @@ export function analyzeRelations(pillars: PillarInfo[]): RelationItem[] {
   }
 
   // 排序：大局优先，冲刑次之
-  const order: Record<string, number> = { 三合局: 0, 三会方: 1, 六冲: 2, 相刑: 3, 自刑: 4, 六合: 5, 天干五合: 6, 六害: 7, 半合: 8, 相破: 9 };
+  const order: Record<string, number> = { 三合局: 0, 三会方: 1, 六冲: 2, 相刑: 3, 自刑: 4, 伏吟: 5, 六合: 6, 天干五合: 7, 六害: 8, 半合: 9, 相破: 10 };
   return items.sort((x, y) => order[x.kind] - order[y.kind]);
 }
 
@@ -344,7 +367,7 @@ export interface StrengthFactor {
 
 export interface StrengthAnalysis {
   total: number;     // /100
-  label: '身强' | '中和偏强' | '中和偏弱' | '身弱';
+  label: '从强倾向' | '偏强' | '中和' | '偏弱' | '从弱倾向';
   deling: StrengthFactor;
   dedi: StrengthFactor;
   deshi: StrengthFactor;
@@ -372,28 +395,28 @@ export interface BaZiChart {
   dayun: DaYunItem[];
 }
 
-// ============ 旺衰三因子详析（得令40 + 得地30 + 得势30） ============
+// ============ 旺衰三因子详析（得令50 + 得地30 + 得势20） ============
 function analyzeStrength(
   dayMaster: string,
   dmElem: Element5,
   pillars: PillarInfo[],
   monthBranch: string,
 ): StrengthAnalysis {
-  // —— 得令（权重 40）：月令中日主的旺相休囚死 ——
+  // —— 得令（权重 50）：月令中日主的旺相休囚死 ——
   const seasonElem = BRANCH_ELEMENT[monthBranch]; // 月支五行即当令之气
   const state = SEASON_WANG[seasonElem]?.[dmElem] ?? '休';
-  const stateScore: Record<string, number> = { 旺: 40, 相: 32, 休: 20, 囚: 12, 死: 4 };
+  const stateScore: Record<string, number> = { 旺: 50, 相: 40, 休: 25, 囚: 15, 死: 6 };
   const stateMeaning: Record<string, string> = {
     旺: '当令而旺，如帝王在位', 相: '得令之生，如太子得势', 休: '生令而泄，如退休休养',
     囚: '克令被困，如身陷囹圄', 死: '被令所克，气机最弱',
   };
-  const delingScore = stateScore[state] ?? 20;
+  const delingScore = stateScore[state] ?? 25;
   const deling: StrengthFactor = {
     score: delingScore,
-    max: 40,
+    max: 50,
     verdict: `日主${dayMaster}${dmElem}生于${monthBranch}月，四季旺衰为「${state}」（${stateMeaning[state]}）`,
     items: [
-      `月令是全局气候的总开关，权重最大（《子平真诠》：月令者，命中之枢纽）`,
+      `月令是全局司令，权重占一半（《子平真诠》：月令者，命中之枢纽）`,
       `月支${monthBranch}五行属${BRANCH_ELEMENT[monthBranch]}，与日主${dmElem}的关系：${
         BRANCH_ELEMENT[monthBranch] === dmElem ? '同气（比劫之地，最助身）'
         : SHENG[BRANCH_ELEMENT[monthBranch]] === dmElem ? '生我（印星之地，得生扶）'
@@ -404,9 +427,9 @@ function analyzeStrength(
     ],
   };
 
-  // —— 得地（权重 30）：四支藏干中有无日主同类的根气（通根） ——
+  // —— 得地（权重 30）：四支藏干中有无日主同类的根气（通根），禄刃 > 墓库 > 余气 ——
   const rootScoreMap = [12, 8, 4]; // 本气/中气/余气
-  const rootName = ['本气根', '中气根', '余气根'];
+  const rootName = ['本气根（禄刃，最壮）', '中气根（次之）', '余气根（墓库，最微）'];
   const rootItems: string[] = [];
   let dediScore = 0;
   for (const p of pillars) {
@@ -430,33 +453,33 @@ function analyzeStrength(
       : ['天干为苗、地支为根——日主无根则纵有印比帮扶也力弱（《滴天髓》：得地者蒂固根深）', '印星所生之气可补根之不足，详见得势一项'],
   };
 
-  // —— 得势（权重 30）：年月时天干中比劫印枭的帮扶 ——
+  // —— 得势（权重 20）：年月时天干中比劫印枭的帮扶（天干为浮，权重小于地支之根） ——
   const helpItems: string[] = [];
   let deshiScore = 0;
   for (const p of pillars) {
     if (p.name === '日柱') continue;
     const ss = p.shiShen;
     if (ss === '比肩' || ss === '劫财') {
-      deshiScore += 8;
-      helpItems.push(`${p.name.replace('柱', '')}干${p.stem}为${ss}（与我同类，直接帮身，+8）`);
+      deshiScore += 7;
+      helpItems.push(`${p.name.replace('柱', '')}干${p.stem}为${ss}（与我同类，直接帮身，+7）`);
     } else if (ss === '正印' || ss === '偏印') {
-      deshiScore += 6;
-      helpItems.push(`${p.name.replace('柱', '')}干${p.stem}为${ss}（生我之源，间接助身，+6）`);
+      deshiScore += 5;
+      helpItems.push(`${p.name.replace('柱', '')}干${p.stem}为${ss}（生我之源，间接助身，+5）`);
     } else {
       helpItems.push(`${p.name.replace('柱', '')}干${p.stem}为${ss}（${ss === '食神' || ss === '伤官' ? '泄我' : ss === '偏财' || ss === '正财' ? '耗我' : '克我'}，不助身，+0）`);
     }
   }
-  deshiScore = Math.min(deshiScore, 30);
+  deshiScore = Math.min(deshiScore, 20);
   const deshi: StrengthFactor = {
     score: deshiScore,
-    max: 30,
-    verdict: deshiScore >= 14 ? '天干印比成势，左辅右弼' : deshiScore > 0 ? '天干略有帮扶，势单力薄' : '天干克泄耗环伺，孤立无援',
+    max: 20,
+    verdict: deshiScore >= 12 ? '天干印比成势，左辅右弼' : deshiScore > 0 ? '天干略有帮扶，势单力薄' : '天干克泄耗环伺，孤立无援',
     items: helpItems,
   };
 
   const total = delingScore + dediScore + deshiScore;
   const label: StrengthAnalysis['label'] =
-    total >= 62 ? '身强' : total >= 47 ? '中和偏强' : total >= 33 ? '中和偏弱' : '身弱';
+    total >= 75 ? '从强倾向' : total >= 60 ? '偏强' : total >= 45 ? '中和' : total >= 30 ? '偏弱' : '从弱倾向';
 
   return {
     total,
@@ -464,7 +487,7 @@ function analyzeStrength(
     deling,
     dedi,
     deshi,
-    summary: `得令 ${delingScore}/40 + 得地 ${dediScore}/30 + 得势 ${deshiScore}/30 = ${total}/100，判为「${label}」。身强者宜克泄耗（财官食伤）以成器，身弱者宜生扶（印枭比劫）以固本；此为教学量化模型，细论还须参看合化、通关与调候（《滴天髓》《穷通宝鉴》）。`,
+    summary: `得令 ${delingScore}/50 + 得地 ${dediScore}/30 + 得势 ${deshiScore}/20 = ${total}/100，判为「${label}」。强者宜克泄耗（财官食伤）以成器，弱者宜生扶（印枭比劫）以固本；「从强/从弱倾向」提示接近从格——真从格须全局一气、日主无根，须人工细核。此为教学量化模型，细论还须参看合化、通关与调候（《滴天髓》《穷通宝鉴》）。`,
   };
 }
 
