@@ -20,8 +20,8 @@ export function setTutorKey(k: string) {
 // —— 轻量 Markdown 渲染（助教回复用）：**粗体**、`代码`、# 标题、【分节】、列表 ——
 function mdInline(text: string): React.ReactNode[] {
   return text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((p, i) => {
-    if (p.startsWith('**') && p.endsWith('**') && p.length > 4) return <b key={i} className="text-[#2c3e57]">{p.slice(2, -2)}</b>;
-    if (p.startsWith('`') && p.endsWith('`') && p.length > 2) return <code key={i} className="bg-[#eef2f8] px-1 rounded text-[#4a5d7e] text-[11px]">{p.slice(1, -1)}</code>;
+    if (p.startsWith('**') && p.endsWith('**') && p.length > 4) return <b key={i} className="text-[#e6dcc0]">{p.slice(2, -2)}</b>;
+    if (p.startsWith('`') && p.endsWith('`') && p.length > 2) return <code key={i} className="bg-[#232a49] px-1 rounded text-[#5b6b9e] text-[11px]">{p.slice(1, -1)}</code>;
     return <span key={i}>{p}</span>;
   });
 }
@@ -33,13 +33,13 @@ export function Md({ text }: { text: string }) {
         const t = raw.trim();
         if (!t) return <div key={i} className="h-1.5" />;
         const h = t.match(/^(#{1,4})\s+(.*)$/);
-        if (h) return <div key={i} className="font-bold text-[#2c3e57] mt-1.5">{mdInline(h[2])}</div>;
+        if (h) return <div key={i} className="font-bold text-[#e6dcc0] mt-1.5">{mdInline(h[2])}</div>;
         if (/^【[^】]{2,12}】/.test(t)) {
           // 【标题】单独成行，或【标题】后接正文时标题加粗
           const m = t.match(/^【[^】]{2,12}】(.*)$/);
           return (
             <div key={i} className="mt-1.5">
-              <span className="font-bold text-[#4a5d7e]">{t.match(/^【[^】]{2,12}】/)![0]}</span>
+              <span className="font-bold text-[#5b6b9e]">{t.match(/^【[^】]{2,12}】/)![0]}</span>
               {m?.[1] && <span>{mdInline(m[1])}</span>}
             </div>
           );
@@ -48,7 +48,7 @@ export function Md({ text }: { text: string }) {
         if (li) {
           return (
             <div key={i} className="pl-3.5 relative">
-              <span className="absolute left-0 text-[#9aa7bd]">{li[1]}</span>
+              <span className="absolute left-0 text-[#6f7a96]">{li[1]}</span>
               <span>{mdInline(li[2])}</span>
             </div>
           );
@@ -115,7 +115,7 @@ export async function classifyQuestion(
   const apiKey = getTutorKey();
   const list = categories.map((c) => `${c.id}｜${c.label}｜用神取${c.yongshen}爻`).join('\n');
   const prompt = [
-    '你是六爻「定用神」助教，教材为《云笈书院六爻卷》卷四（用神卷）。',
+    '你是六爻「定用神」助教，教材为六爻课程卷四（用神卷）。',
     '学员问了一件具体的事，请判断它属于下列哪个测事类别，并说明取用神的理由（注明卷四依据，80字内）。',
     '注意：同一个问题表面用词与真实所测可能不同，要抓住「最终想知道什么」来取用（如问面试能否通过，实际测录取文书，取父母爻）。',
     '',
@@ -245,15 +245,15 @@ export function TutorPanel({
   };
 
   const keyBar = (
-    <div className="border-b border-[#dbe4ef] bg-white px-2 py-1.5">
+    <div className="border-b border-[#2a3355] bg-[#11162b] px-2 py-1.5">
       {hasKey && !showKeyBox ? (
         <div className="flex items-center justify-between">
-          <span className="flex items-center gap-1 text-[11px] text-emerald-700">
+          <span className="flex items-center gap-1 text-[11px] text-emerald-400">
             <KeyRound size={12} /> Kimi Key 已配置（仅存本机浏览器）
           </span>
           <span className="flex items-center gap-2">
-            <button onClick={() => setShowKeyBox(true)} className="text-[11px] text-[#4a5d7e] hover:underline">更换</button>
-            <button onClick={clearKey} className="flex items-center gap-0.5 text-[11px] text-red-600 hover:underline">
+            <button onClick={() => setShowKeyBox(true)} className="text-[11px] text-[#5b6b9e] hover:underline">更换</button>
+            <button onClick={clearKey} className="flex items-center gap-0.5 text-[11px] text-red-400 hover:underline">
               <Trash2 size={11} /> 清除
             </button>
           </span>
@@ -261,21 +261,21 @@ export function TutorPanel({
       ) : (
         <div>
           <div className="flex items-center gap-1.5">
-            <KeyRound size={12} className="text-[#4a5d7e] shrink-0" />
+            <KeyRound size={12} className="text-[#5b6b9e] shrink-0" />
             <input
               type="password"
               value={keyInput}
               onChange={(e) => setKeyInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) saveKey(); }}
               placeholder="填入 Kimi API Key（sk-...）"
-              className="flex-1 text-xs px-2 py-1 border border-[#dbe4ef] rounded focus:outline-none focus:border-[#4a5d7e]"
+              className="flex-1 text-xs px-2 py-1 border border-[#2a3355] rounded focus:outline-none focus:border-[#5b6b9e]"
             />
             <button onClick={saveKey} disabled={!keyInput.trim()}
-              className="text-xs px-2 py-1 rounded bg-[#4a5d7e] text-white disabled:opacity-40 hover:bg-[#3a4d6e]">
+              className="text-xs px-2 py-1 rounded bg-[#5b6b9e] text-white disabled:opacity-40 hover:bg-[#48578a]">
               保存
             </button>
           </div>
-          <p className="mt-1 text-[10px] text-[#8a97a8] leading-snug">
+          <p className="mt-1 text-[10px] text-[#76829c] leading-snug">
             Key 只保存在你本机浏览器的 localStorage，随请求头发给服务器代理，不会写入任何文件或代码仓库（到 kimi.com 控制台获取）。若站长已在服务器配置 KIMI_API_KEY，则无需填写，直接提问即可。
           </p>
         </div>
@@ -284,35 +284,35 @@ export function TutorPanel({
   );
 
   return (
-    <div className="border border-[#b8c9e0] bg-[#f4f8fd] rounded-lg overflow-hidden">
+    <div className="border border-[#2e375c] bg-[#161c33] rounded-lg overflow-hidden">
       {keyBar}
       <div ref={scrollRef} className={`${height} overflow-y-auto px-3 py-2 space-y-2`}>
         {history.length === 0 && (
-          <p className="text-[11px] text-[#7a8aa0] leading-relaxed">
-            我是云笈书院六爻助教（Kimi K3 驱动），通读卷一~卷四教材，也知道你当前这盘卦的全部细节。有什么不懂直接问，例如：「为什么这爻是真空不是假空」「世爻为什么是三爻」「这卦求财怎么看」。
+          <p className="text-[11px] text-[#7d89a3] leading-relaxed">
+            我是六爻助教（Kimi K3 驱动），通读卷一~卷四教材，也知道你当前这盘卦的全部细节。有什么不懂直接问，例如：「为什么这爻是真空不是假空」「世爻为什么是三爻」「这卦求财怎么看」。
           </p>
         )}
         {history.map((m, i) => (
           <div key={i} className={`text-xs leading-relaxed rounded-lg px-3 py-2 ${
-            m.role === 'user' ? 'bg-[#dce8f8] text-[#2c3e57] ml-8 whitespace-pre-wrap' : 'bg-white border border-[#dbe4ef] text-[#33404f] mr-4'
+            m.role === 'user' ? 'bg-[#27335c] text-[#e6dcc0] ml-8 whitespace-pre-wrap' : 'bg-[#11162b] border border-[#2a3355] text-[#cdd5e4] mr-4'
           }`}>
             {m.role === 'assistant'
               ? (m.content ? <Md text={m.content} /> : (streaming && i === history.length - 1 ? '思考中…' : ''))
               : m.content}
           </div>
         ))}
-        {error && <div className="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded px-2 py-1.5 whitespace-pre-wrap">{error}</div>}
+        {error && <div className="text-[11px] text-red-300 bg-red-400/10 border border-red-400/25 rounded px-2 py-1.5 whitespace-pre-wrap">{error}</div>}
       </div>
-      <div className="flex items-center gap-1.5 border-t border-[#dbe4ef] bg-white px-2 py-1.5">
+      <div className="flex items-center gap-1.5 border-t border-[#2a3355] bg-[#11162b] px-2 py-1.5">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) send(); }}
           placeholder={placeholder}
-          className="flex-1 text-xs px-2 py-1.5 border border-[#dbe4ef] rounded focus:outline-none focus:border-[#4a5d7e]"
+          className="flex-1 text-xs px-2 py-1.5 border border-[#2a3355] rounded focus:outline-none focus:border-[#5b6b9e]"
         />
         <button onClick={send} disabled={streaming || !input.trim()}
-          className="p-1.5 rounded bg-[#4a5d7e] text-white disabled:opacity-40 hover:bg-[#3a4d6e]">
+          className="p-1.5 rounded bg-[#5b6b9e] text-white disabled:opacity-40 hover:bg-[#48578a]">
           {streaming ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
         </button>
       </div>
@@ -329,14 +329,14 @@ export function StepAsk({ stepTitle, systemPrompt, guaContext }: {
     <div className="mt-2">
       {!open ? (
         <button onClick={() => setOpen(true)}
-          className="flex items-center gap-1.5 text-xs text-[#4a5d7e] border border-[#b8c9e0] bg-[#f4f8fd] hover:bg-[#e8f0fb] rounded-full px-3 py-1.5">
+          className="flex items-center gap-1.5 text-xs text-[#5b6b9e] border border-[#2e375c] bg-[#161c33] hover:bg-[#252c4e] rounded-full px-3 py-1.5">
           <MessageCircleQuestion size={13} /> 对此步有疑问？问助教
         </button>
       ) : (
         <div>
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] font-semibold text-[#4a5d7e]">针对「{stepTitle}」提问</span>
-            <button onClick={() => setOpen(false)} className="text-[#8a97a8] hover:text-[#4a5d7e]"><X size={14} /></button>
+            <span className="text-[11px] font-semibold text-[#5b6b9e]">针对「{stepTitle}」提问</span>
+            <button onClick={() => setOpen(false)} className="text-[#76829c] hover:text-[#5b6b9e]"><X size={14} /></button>
           </div>
           <TutorPanel systemPrompt={systemPrompt} guaContext={guaContext} placeholder={`就「${stepTitle}」提问，如：这一步为什么这么定？`} />
         </div>
@@ -390,13 +390,13 @@ export function AiVerdict({ systemPrompt, guaContext, title, intro, buttonText, 
   };
 
   return (
-    <div className="mb-3 rounded-lg border-2 border-[#7c5cd6] bg-gradient-to-br from-[#f7f3ff] to-[#fdfbf7] overflow-hidden">
-      <div className="flex items-center justify-between px-3 py-2 bg-[#7c5cd6] text-white">
+    <div className="mb-3 rounded-lg border-2 border-[#8b6fd8] bg-gradient-to-br from-[#1d1838] to-[#171a2e] overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-2 bg-[#8b6fd8] text-white">
         <span className="text-xs font-bold flex items-center gap-1.5">
           <Sparkles size={13} /> {title ?? 'AI 完整断卦 · Kimi K3（结论 / 应期 / 决策 / 化解）'}
         </span>
         {text && !busy && (
-          <button onClick={run} className="flex items-center gap-1 text-[11px] bg-white/15 hover:bg-white/25 rounded px-2 py-0.5">
+          <button onClick={run} className="flex items-center gap-1 text-[11px] bg-[#11162b]/15 hover:bg-[#11162b]/25 rounded px-2 py-0.5">
             <RefreshCw size={11} /> 重新断
           </button>
         )}
@@ -404,23 +404,23 @@ export function AiVerdict({ systemPrompt, guaContext, title, intro, buttonText, 
       <div className="px-3 py-2.5">
         {!text && !busy && !error && (
           <div className="text-center py-2">
-            <p className="text-[11px] text-[#7a6a92] mb-2 leading-relaxed">
+            <p className="text-[11px] text-[#a79cc8] mb-2 leading-relaxed">
               {intro ?? '上面是规则引擎按教材条文的逐项判定。点击下方按钮，Kimi K3 会把整盘卦串起来，用大白话讲：所问之事结果如何、什么时候应验、该怎么决策、如何趋避化解。'}
             </p>
             <button onClick={run}
-              className="inline-flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-lg bg-[#7c5cd6] text-white hover:bg-[#6a4cc0] shadow">
+              className="inline-flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-lg bg-[#8b6fd8] text-white hover:bg-[#7a5fd0] shadow">
               <Sparkles size={15} /> {buttonText ?? '生成 AI 完整断卦'}
             </button>
           </div>
         )}
-        {busy && !text && <p className="text-xs text-[#7a6a92] py-2">助教正在通盘推演，先思考再作答，约需十几秒…</p>}
+        {busy && !text && <p className="text-xs text-[#a79cc8] py-2">助教正在通盘推演，先思考再作答，约需十几秒…</p>}
         {text && (
-          <div className="text-xs leading-relaxed text-[#3d3352]">
+          <div className="text-xs leading-relaxed text-[#ddd6ea]">
             <Md text={text} />
-            {busy && <span className="inline-block w-1.5 h-3.5 bg-[#7c5cd6] animate-pulse ml-0.5 align-middle" />}
+            {busy && <span className="inline-block w-1.5 h-3.5 bg-[#8b6fd8] animate-pulse ml-0.5 align-middle" />}
           </div>
         )}
-        {error && <div className="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded px-2 py-1.5 whitespace-pre-wrap">{error}</div>}
+        {error && <div className="text-[11px] text-red-300 bg-red-400/10 border border-red-400/25 rounded px-2 py-1.5 whitespace-pre-wrap">{error}</div>}
       </div>
     </div>
   );

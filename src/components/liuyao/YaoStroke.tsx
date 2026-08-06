@@ -16,7 +16,7 @@ export function YaoStroke({ yang, moving, mark, size = 'md' }: { yang: boolean; 
         )}
       </svg>
       {moving && (
-        <span className="text-[#b03a2e] font-bold leading-none" style={{ fontSize: size === 'lg' ? 16 : 13 }}>
+        <span className="text-[#d0604d] font-bold leading-none" style={{ fontSize: size === 'lg' ? 16 : 13 }}>
           {mark ?? (yang ? 'O' : 'X')}
         </span>
       )}
@@ -29,7 +29,7 @@ export function HexagramFigure({ bits, movingIdx = [], marks = [] as string[], s
   bits: number[]; movingIdx?: number[]; marks?: string[]; size?: 'sm' | 'md' | 'lg';
 }) {
   return (
-    <div className="flex flex-col-reverse gap-1 items-start text-[#2b2620]">
+    <div className="flex flex-col-reverse gap-1 items-start text-[#e8e1cd]">
       {bits.map((b, i) => (
         <YaoStroke key={i} yang={b === 1} moving={movingIdx.includes(i)} mark={marks[i]} size={size} />
       ))}

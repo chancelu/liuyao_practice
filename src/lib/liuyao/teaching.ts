@@ -1,4 +1,4 @@
-// 教学数据：卦例库、八宫推演、必背歌诀 —— 内容出自《云笈书院六爻卷》卷一~卷四
+// 教学数据：卦例库、八宫推演、必背歌诀 —— 内容出自六爻课程卷一~卷四
 
 import { PALACES } from './constants';
 import { HEXAGRAMS_64 } from '../../data/hexagrams64';

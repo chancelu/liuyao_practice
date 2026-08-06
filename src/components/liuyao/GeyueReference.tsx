@@ -12,13 +12,13 @@ export function GeyueReference() {
   return (
     <div className="space-y-3">
       {GEYUE.map((g, gi) => (
-        <div key={gi} className="border border-[#d8cdb4] rounded-lg bg-[#faf6ea]">
+        <div key={gi} className="border border-[#2e375c] rounded-lg bg-[#151b31]">
           <button onClick={() => toggleGroup(gi)} className="w-full flex items-center justify-between px-4 py-3 text-left">
             <div>
-              <span className="font-bold text-[#3d3428]" style={{ fontFamily: '"Songti SC",serif' }}>{g.title}</span>
-              <span className="ml-2 text-xs text-[#8a7f6a]">{g.source} · {g.items.length} 则</span>
+              <span className="font-bold text-[#e8e1cd]" style={{ fontFamily: '"Songti SC",serif' }}>{g.title}</span>
+              <span className="ml-2 text-xs text-[#8d8670]">{g.source} · {g.items.length} 则</span>
             </div>
-            {openGroups.includes(gi) ? <ChevronDown size={16} className="text-[#8a7f6a]" /> : <ChevronRight size={16} className="text-[#8a7f6a]" />}
+            {openGroups.includes(gi) ? <ChevronDown size={16} className="text-[#8d8670]" /> : <ChevronRight size={16} className="text-[#8d8670]" />}
           </button>
           {openGroups.includes(gi) && (
             <div className="px-4 pb-3 space-y-1.5">
@@ -26,17 +26,17 @@ export function GeyueReference() {
                 const key = `${gi}-${it.name}`;
                 const open = openItems.includes(key);
                 return (
-                  <div key={key} className={`border rounded ${open ? 'border-[#c9b98f] bg-white' : 'border-[#e8dfc8] bg-[#fdfaf3]'}`}>
+                  <div key={key} className={`border rounded ${open ? 'border-[#b08a44] bg-[#11162b]' : 'border-[#283050] bg-[#1a2140]'}`}>
                     <button onClick={() => toggleItem(key)} className="w-full flex items-center justify-between px-3 py-2 text-left">
-                      <span className="text-xs font-semibold text-[#6b5330] flex items-center gap-1.5">
-                        <ScrollText size={11} className="text-[#9a6a3a]" /> {it.name}
+                      <span className="text-xs font-semibold text-[#d4c294] flex items-center gap-1.5">
+                        <ScrollText size={11} className="text-[#c9a05e]" /> {it.name}
                       </span>
-                      {open ? <ChevronDown size={13} className="text-[#8a7f6a]" /> : <ChevronRight size={13} className="text-[#8a7f6a]" />}
+                      {open ? <ChevronDown size={13} className="text-[#8d8670]" /> : <ChevronRight size={13} className="text-[#8d8670]" />}
                     </button>
                     {open && (
                       <div className="px-3 pb-2.5">
-                        <p className="text-xs text-[#4a4234] leading-relaxed" style={{ fontFamily: '"Songti SC",serif' }}>{it.text}</p>
-                        {it.note && <p className="text-[10px] text-[#9a8a68] mt-1">{it.note}</p>}
+                        <p className="text-xs text-[#d8d0b8] leading-relaxed" style={{ fontFamily: '"Songti SC",serif' }}>{it.text}</p>
+                        {it.note && <p className="text-[10px] text-[#7d7663] mt-1">{it.note}</p>}
                       </div>
                     )}
                   </div>
