@@ -112,7 +112,7 @@ export function LiuyaoApp() {
 
             <section>
               <div className="section-head !mb-1"><span className="num text-base">叁</span><span className="title">九步研习工作流</span></div>
-              <p className="text-[10px] text-[#6f6a58] mb-3">每步三块内容：「这一步怎么推/想」绿色教学框 · 「规则·歌诀」黄色原文框 · 「依据」课程出处</p>
+              <p className="text-[10px] text-[#6f6a58] mb-3">每步三块内容：「这一步怎么推/想」绿色教学框 · 「经典区」典籍原文+白话解读 · 「实战区」派别用法与课程外补充</p>
               <WorkflowSteps p={result.p} it={result.it} yaoNames={yaoNames} question={question} />
             </section>
 
