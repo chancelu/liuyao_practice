@@ -5,6 +5,8 @@ import { STEMS, BRANCHES, STEM_ELEMENT, BRANCH_ELEMENT, SHENG, KE, SEASON_WANG, 
 import type { Element5 } from '../liuyao/constants';
 import { computeGanZhi, jiaziOf, nearbyJie } from '../liuyao/calendar';
 import type { GanZhi } from '../liuyao/calendar';
+import { detectWaige } from './geju';
+import type { WaigeMatch } from './geju';
 
 export const ELEMENTS: Element5[] = ['木', '火', '土', '金', '水'];
 
@@ -386,7 +388,8 @@ export interface BaZiChart {
   wuxingCount: Record<Element5, number>;
   totalPower: number;
   strength: StrengthAnalysis;
-  geju: GejuResult;          // 月令取格（《子平真诠》）
+  geju: GejuResult;          // 月令取格·正格（《子平真诠》）
+  waige: WaigeMatch[];       // 外格（从化专旺等）启发式初筛，须人工细核
   relations: RelationItem[]; // 干支合冲刑害
   deLing: boolean;
   dayunDir: '顺行' | '逆行';
@@ -533,6 +536,11 @@ export function paipanBazi(date: Date, gender: 'male' | 'female'): BaZiChart {
   const deLing = strength.deling.score >= 32; // 旺或相
   const geju = analyzeGeju(dayMaster, pillars);
   const relations = analyzeRelations(pillars);
+  const waige = detectWaige({
+    dayMaster, dmElem, pillars, wuxingCount, totalPower,
+    strengthTotal: strength.total, dediScore: strength.dedi.score, deshiScore: strength.deshi.score,
+    monthBranch: gz.monthBranch,
+  });
 
   // 大运：阳男阴女顺行，阴男阳女逆行（《千里命稿》）
   const yearYang = isYangStem(gz.year[0]);
@@ -575,6 +583,7 @@ export function paipanBazi(date: Date, gender: 'male' | 'female'): BaZiChart {
     totalPower,
     strength,
     geju,
+    waige,
     relations,
     deLing,
     dayunDir,

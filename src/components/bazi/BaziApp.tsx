@@ -1,15 +1,19 @@
-// 八字教学页：排盘 + 十三步教学流程 + 领域速查 + 互洽清单 + 歌诀 + AI 助教
+// 八字教学页：排盘 + 十三步教学流程（双区知识层：经典区+实战区）+ 领域速查 + 互洽清单 + 歌诀 + AI 助教
 import { useMemo, useState } from 'react';
 import { paipanBazi, ELEMENTS, STEM_NATURE } from '../../lib/bazi/engine';
 import type { BaZiChart, RelationItem } from '../../lib/bazi/engine';
 import { analyzeYongshen, analyzeDayun, analyzeLiunian, analyzeLiuyue } from '../../lib/bazi/forecast';
+import { gejuDetail, QU_GE_RULES } from '../../lib/bazi/geju';
+import { shenshaInfo } from '../../lib/bazi/shensha';
+import { BAZI_STEP_KNOWLEDGE } from '../../lib/bazi/knowledge';
+import { StepZones } from '../StepZones';
 import type { Element5 } from '../../lib/liuyao/constants';
 import { buildBaziContext, buildBaziSystemPrompt, buildBaziReadingPrompt, BAZI_BOOKS } from '../../lib/bazi/tutorContext';
 import { StepAsk, TutorPanel, AiVerdict } from '../liuyao/TutorChat';
 import { SolarTimeInput, type PlaceSel } from '../geo/SolarTimeInput';
 import { DEFAULT_PLACE, cityAt } from '../../lib/geo/cities';
 import { solarCorrection, dateTimeOf } from '../../lib/geo/solarTime';
-import { ChevronDown, ChevronRight, GraduationCap, X, BookOpen, ScrollText } from 'lucide-react';
+import { ChevronDown, ChevronRight, GraduationCap, X, BookOpen } from 'lucide-react';
 
 const ELEM_COLOR: Record<Element5, string> = { 木: '#6fbf73', 火: '#e57373', 土: '#d4a24e', 金: '#c9c9c9', 水: '#64b5f6' };
 
@@ -52,7 +56,7 @@ const VERSE = [
   '定盘：年看立春月看节，时辰要校真太阳',
   '强弱：得令得地又得势，根重干浮看地支',
   '用神：先扶抑后调候，通关顺势做补充',
-  '格局：月令透干来定格，相神配合定成败',
+  '格局：先查从化与专旺，再按月令透干取',
   '读人：十神落宫加生克，干透支藏内外分',
   '机关：合冲刑害查一遍，紧贴力大遥力轻',
   '神煞：只润色不定性，组合有根才显灵',
@@ -69,14 +73,6 @@ function Teach({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-function Basis({ text }: { text: string }) {
-  return (
-    <div className="rounded border border-[#32281a] bg-[#201a12] px-3 py-1.5 text-[11px] leading-relaxed text-[#a89f86]">
-      <ScrollText size={11} className="inline mr-1 -mt-0.5" /><b>依据：</b>{text}
-    </div>
-  );
-}
-
 interface StepDef { no: number; title: string; subtitle: string }
 const STEPS: StepDef[] = [
   { no: 1, title: '日主定性', subtitle: '十天干性情 · 天赋底色' },
@@ -84,7 +80,7 @@ const STEPS: StepDef[] = [
   { no: 3, title: '强弱判断', subtitle: '得令50 · 得地30 · 得势20' },
   { no: 4, title: '取用神', subtitle: '扶抑 → 调候 → 通关 → 顺势' },
   { no: 5, title: '用神质检', subtitle: '局里有吗 · 有根吗 · 受伤吗' },
-  { no: 6, title: '定格局', subtitle: '月令透干取格 · 相神成败' },
+  { no: 6, title: '定格局', subtitle: '先查外格 · 再取正格 · 成败救应' },
   { no: 7, title: '十神读人', subtitle: '十神 × 宫位 · 内外分看' },
   { no: 8, title: '刑冲合害', subtitle: '机关引线 · 紧贴力大' },
   { no: 9, title: '神煞标注', subtitle: '应象润色 · 不定吉凶' },
@@ -120,6 +116,7 @@ function StepCard({ step, open, onToggle, ask, children }: {
 
 const TONE_CLS = { 吉: 'bg-emerald-400/15 text-emerald-300', 忌: 'bg-red-400/15 text-red-300', 平: 'bg-[#242b49] text-[#b0a78c]' } as const;
 const SEASON_OF: Record<string, string> = { 寅: '春', 卯: '春', 辰: '春末', 巳: '夏', 午: '夏', 未: '夏末', 申: '秋', 酉: '秋', 戌: '秋末', 亥: '冬', 子: '冬', 丑: '冬末' };
+const ZHEN_CLS = { 真: 'bg-emerald-400/15 text-emerald-300', 假: 'bg-amber-400/15 text-amber-300', 存疑: 'bg-[#242b49] text-[#b0a78c]' } as const;
 
 export function BaziApp() {
   const [date, setDate] = useState('2000-01-01');
@@ -165,6 +162,7 @@ export function BaziApp() {
   const askFor = (n: number) => (
     <StepAsk stepNo={n} stepTitle={STEPS[n - 1].title} systemPrompt={buildBaziSystemPrompt(n)} guaContext={ctx} />
   );
+  const zone = (n: number) => <StepZones knowledge={BAZI_STEP_KNOWLEDGE[n]} />;
 
   const dm = chart.dayMasterElement;
   const strong = chart.strength.label === '从强倾向' || chart.strength.label === '偏强';
@@ -176,6 +174,16 @@ export function BaziApp() {
     const hitJi = branches.some((b) => jiBranches.has(b));
     return hitJi ? '被冲刑之支属忌神一方——冲去忌神，反凶为吉' : '被冲刑之支涉喜用一方——喜用受伤，须防';
   };
+  const gejuInfo = gejuDetail(chart.geju.name);
+  // 神煞归组：名称 → 落宫列表（供第 9 步详解）
+  const shaGroups = new Map<string, string[]>();
+  for (const p of chart.pillars) {
+    for (const s of p.shensha) {
+      const info = shenshaInfo(s);
+      if (!info) continue;
+      shaGroups.set(info.name, [...(shaGroups.get(info.name) ?? []), p.name]);
+    }
+  }
 
   return (
     <>
@@ -216,6 +224,11 @@ export function BaziApp() {
                 <span className="num text-base">贰</span>
                 <span className="title">命盘 · {chart.genderLabel} · 日主 {chart.dayMaster}{chart.dayMasterElement}（{chart.strength.label}）</span>
                 <span className="text-xs font-bold bg-gradient-to-b from-[#e3c98a] to-[#b08d48] text-[#1a1408] rounded-full px-2.5 py-0.5 align-middle">{chart.geju.name}</span>
+                {chart.waige.length > 0 && (
+                  <span className="text-xs font-bold border border-[#8ea4d0]/50 text-[#8ea4d0] rounded-full px-2.5 py-0.5 align-middle ml-1">
+                    外格候选：{chart.waige[0].name}（{chart.waige[0].zhen}）
+                  </span>
+                )}
               </div>
               <div className="text-xs text-[#8d8670]">胎元{chart.taiyuan} · {chart.kong.join('')}空 · 大运{chart.dayunDir} · 约 {chart.qiyunAge} 岁起运</div>
             </div>
@@ -266,15 +279,14 @@ export function BaziApp() {
                       <td key={p.name} className="py-1">
                         {p.shensha.length
                           ? p.shensha.map((s) => {
-                              const good = /贵人|文昌|禄神|金舆|天医|十灵/.test(s);
-                              const bad = /羊刃|劫煞|亡神|孤辰|寡宿|阴阳差错/.test(s);
-                              const love = /桃花|红艳|红鸾|天喜/.test(s);
-                              const cls = good ? 'bg-emerald-400/15 text-emerald-300'
-                                : bad ? 'bg-red-400/15 text-red-300'
-                                : love ? 'bg-pink-400/15 text-pink-300'
+                              const info = shenshaInfo(s);
+                              const t = info?.tone ?? 'neutral';
+                              const cls = t === 'good' ? 'bg-emerald-400/15 text-emerald-300'
+                                : t === 'bad' ? 'bg-red-400/15 text-red-300'
+                                : t === 'love' ? 'bg-pink-400/15 text-pink-300'
                                 : s.includes('魁罡') ? 'bg-purple-400/15 text-purple-300'
                                 : 'bg-[#242b49] text-[#b0a78c]';
-                              return <span key={s} className={`inline-block rounded px-1 mr-0.5 mb-0.5 ${cls}`}>{s}</span>;
+                              return <span key={s} className={`inline-block rounded px-1 mr-0.5 mb-0.5 ${cls}`} title={info ? `${info.chafa}\n${info.explain}` : undefined}>{s}</span>;
                             })
                           : <span className="text-[#55513f]">—</span>}
                       </td>
@@ -288,7 +300,7 @@ export function BaziApp() {
               </table>
             </div>
             <p className="mt-2 text-[10px] text-[#6f6a58] leading-snug">
-              神煞图例：<span className="text-emerald-400">绿＝吉神</span>　<span className="text-pink-700">粉＝姻缘</span>　<span className="text-red-700">红＝凶煞</span>　紫＝魁罡　灰＝中性。查法以《三命通会》为准，神煞只作应象润色，不可喧宾夺主盖过五行生克。
+              神煞图例：<span className="text-emerald-400">绿＝吉神</span>　<span className="text-pink-700">粉＝姻缘</span>　<span className="text-red-700">红＝凶煞</span>　紫＝魁罡　灰＝中性。查法以《三命通会》为准，神煞只作应象润色，不可喧宾夺主盖过五行生克；悬停标签可看查法，逐条解读见第 9 步。
             </p>
             {/* 格局 + 刑冲合害速览 */}
             <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -296,6 +308,7 @@ export function BaziApp() {
                 <div className="text-xs font-bold text-[#c8bd9c] mb-1.5">
                   月令取格：<span className="text-sm text-[#c9a962]" style={{ fontFamily: '"Songti SC",serif' }}>{chart.geju.name}</span>
                   {chart.geju.touGan && <span className="ml-1 font-normal text-[#6f6a58]">（{chart.geju.touGan}透干）</span>}
+                  <span className="ml-1 font-normal text-[#6f6a58]">（外格初筛见第 6 步）</span>
                 </div>
                 <ul className="space-y-1">
                   {chart.geju.steps.map((s, i) => <li key={i} className="text-[11px] text-[#a89f86] leading-snug">· {s}</li>)}
@@ -333,7 +346,9 @@ export function BaziApp() {
 
           {/* 十三步教学流程 + 综合论命 */}
           <section className="space-y-3">
-            <div className="section-head"><span className="num text-base">叁</span><span className="title">十三步研习工作流</span></div>
+            <div className="section-head"><span className="num text-base">叁</span><span className="title">十三步研习工作流</span>
+              <span className="text-[10px] font-normal text-[#6f6a58] ml-2">每步双区：<span className="text-[#d4b578]">经典区</span>（典籍原文+白话解读）· <span className="text-[#8ea4d0]">实战区</span>（派别用法·典籍外补充）</span>
+            </div>
 
             {/* ① 日主定性 */}
             <StepCard step={STEPS[0]} open={isOpen(1)} onToggle={() => toggle(1)} ask={askFor(1)}>
@@ -346,7 +361,7 @@ export function BaziApp() {
                   ))}
                 </div>
               </Teach>
-              <Basis text="《滴天髓》论十天干本性：「五阳从气不从势，五阴从势无情义」——阳干刚健、阴干柔顺，本性是读盘的第一印象。" />
+              {zone(1)}
             </StepCard>
 
             {/* ② 月令环境 */}
@@ -356,7 +371,7 @@ export function BaziApp() {
                 <p>日主{chart.dayMaster}{dm}在月令的十二长生状态为「<b>{chart.pillars[1].dishi}</b>」，四季旺衰为「<b>{chart.strength.deling.verdict.split('，').pop()}</b>」。</p>
                 <p><b>调候伏笔</b>：{yong.channels[1].verdict}</p>
               </Teach>
-              <Basis text="《子平真诠》：月令者，命中之枢纽；《穷通宝鉴》：夏生需水润、冬生需火暖——季节寒暖是调候用神的伏笔，到第 4 步兑现。" />
+              {zone(2)}
             </StepCard>
 
             {/* ③ 强弱判断 */}
@@ -390,7 +405,7 @@ export function BaziApp() {
                 ))}
               </div>
               <p className="text-xs text-[#d4b578] mb-3 leading-relaxed">{chart.strength.summary}</p>
-              <Basis text="《滴天髓》：「能知衰旺之真机，其于三命之奥，思过半矣」。判分模型：得令50（旺50/相40/休25/囚15/死6）、得地30（本气禄刃12/中气8/余气墓库4）、得势20（比劫干7/印枭干5）；75 以上从强倾向、60 偏强、45 中和、30 偏弱、以下从弱倾向。" />
+              {zone(3)}
             </StepCard>
 
             {/* ④ 取用神（四通道） */}
@@ -422,7 +437,7 @@ export function BaziApp() {
                 </div>
                 <p className="mt-1.5 text-[11px] text-[#d4b578] leading-snug">{yong.summary}</p>
               </div>
-              <Basis text="四通道校验：扶抑（《滴天髓》强者抑之弱者扶之）→ 调候（《穷通宝鉴》冬火夏水优先）→ 通关（《神峰通考》两军交战取和解）→ 顺势（《子平真诠》从格不可逆性）。裁定优先级：调候急迫＞从格顺势＞两强通关＞常规扶抑。" />
+              {zone(4)}
             </StepCard>
 
             {/* ⑤ 用神质检 */}
@@ -441,14 +456,15 @@ export function BaziApp() {
               <Teach title="为什么要质检用神？">
                 <p>取出来的用神只是「药方」——药在不在药柜里（局里有吗）、是药材还是药渣（有根吗）、有没有受潮（受伤吗），决定了这个命能兑现几分。<b>透干＞藏支，有根＞虚浮，远克＞贴克</b>：三关全过，格局清亮；三关尽失，则须等待岁运把药用出来。</p>
               </Teach>
-              <Basis text="《滴天髓》通根透干之辨；《子平真诠》论相神：「月令既得用神，则别位亦必有相，若君之有相」。质检三问即格局高低的初判。" />
+              {zone(5)}
             </StepCard>
 
             {/* ⑥ 定格局 */}
             <StepCard step={STEPS[5]} open={isOpen(6)} onToggle={() => toggle(6)} ask={askFor(6)}>
+              {/* 正格推演 */}
               <div className="border border-[#32281a] rounded-lg bg-[#1d1912] px-3 py-2 mb-3">
                 <div className="text-xs font-bold text-[#c8bd9c] mb-1.5">
-                  本盘格局：<span className="text-sm text-[#c9a962]" style={{ fontFamily: '"Songti SC",serif' }}>{chart.geju.name}</span>
+                  本盘正格：<span className="text-sm text-[#c9a962]" style={{ fontFamily: '"Songti SC",serif' }}>{chart.geju.name}</span>
                   {chart.geju.touGan && <span className="ml-1 text-[11px] font-normal text-[#6f6a58]">（{chart.geju.touGan}透干）</span>}
                 </div>
                 <ul className="space-y-1">
@@ -456,11 +472,56 @@ export function BaziApp() {
                 </ul>
                 {chart.geju.note && <p className="mt-1.5 text-[11px] text-[#d4b578] leading-snug border-t border-[#292219] pt-1.5"><b>成格喜忌：</b>{chart.geju.note}</p>}
               </div>
-              <Teach title="取格的优先级与雷区">
-                <p>取格优先级：<b>本气透 ＞ 中气透 ＞ 余气透 ＞ 本气伏</b>——透出天干者「清」，伏藏不透者「浊而待透」。</p>
-                <p>取格之后找<b>相神</b>（辅佐成格之字）：如正官格得财星生官、食神制杀格得食神通根——相神得力则格成而高；再查<b>破格雷区</b>：格神逢冲、被合化他物、喜忌混杂（如官杀混杂），皆是破格信号，须回到第 5 步质检核对。</p>
-              </Teach>
-              <Basis text="《子平真诠·论用神》「八字用神，专求月令」；同书〈论用神成败救应〉：成中有败、败中有成，全在相神配合。" />
+              {/* 本格白话解读 + 成败 + 实战 */}
+              {gejuInfo && (
+                <div className="border border-[#32281a] rounded-lg bg-[#1d1912] px-3 py-2 mb-3 space-y-1.5">
+                  <div className="text-xs font-bold text-[#c8bd9c]">「{chart.geju.name}」白话解读</div>
+                  <p className="text-[11px] text-[#a89f86] leading-relaxed">{gejuInfo.explain}</p>
+                  <p className="text-[11px] text-[#d4b578] leading-relaxed"><b>成格/破格雷区：</b>{gejuInfo.chengjiu}</p>
+                  <p className="text-[11px] text-[#93a0bd] leading-relaxed"><b>实战要点：</b>{gejuInfo.practice}</p>
+                </div>
+              )}
+              {/* 取格细则（补跳步） */}
+              <div className="border border-[#32281a] rounded-lg bg-[#1d1912] px-3 py-2 mb-3">
+                <div className="text-xs font-bold text-[#c8bd9c] mb-1.5">取格细则 · 教科书没讲清的四个环节</div>
+                <div className="space-y-1.5">
+                  {QU_GE_RULES.map((r) => (
+                    <div key={r.title}>
+                      <div className="text-[11px] font-bold text-[#e8e1cd]">{r.title}</div>
+                      <p className="text-[11px] text-[#a89f86] leading-relaxed">{r.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* 外格速查 */}
+              <div className="border border-[#3d3550] rounded-lg bg-[#191624] px-3 py-2 mb-3">
+                <div className="text-xs font-bold text-[#bdaee0] mb-1.5">外格速查（从化·专旺·化气·两神成象）——先查外格再论正格，真格假格须人工细核</div>
+                {chart.waige.length ? (
+                  <div className="space-y-2.5">
+                    {chart.waige.map((w) => (
+                      <div key={w.name} className="border-t border-[#2c2740] pt-2 first:border-t-0 first:pt-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-xs font-bold text-[#d9cff0]" style={{ fontFamily: '"Songti SC",serif' }}>{w.name}</span>
+                          <span className="text-[10px] rounded px-1 bg-[#2c2740] text-[#9d8fc4]">{w.family}</span>
+                          <span className={`text-[10px] font-bold rounded px-1 ${ZHEN_CLS[w.zhen]}`}>{w.zhen === '真' ? '倾向真格' : w.zhen === '假' ? '倾向假格' : '存疑待核'}</span>
+                        </div>
+                        <ul className="mt-1 space-y-0.5">
+                          {w.checks.map((c, i) => (
+                            <li key={i} className={`text-[11px] leading-snug ${c.ok ? 'text-emerald-300/80' : 'text-[#8d8670]'}`}>{c.ok ? '✓' : '✗'} {c.text}</li>
+                          ))}
+                        </ul>
+                        <p className="mt-1 text-[11px] text-[#b0a8c8] leading-relaxed">{w.brief}</p>
+                        <p className="text-[11px] text-[#d4b578] leading-relaxed"><b>用神取向：</b>{w.yong}</p>
+                        <p className="text-[11px] text-[#93a0bd] leading-relaxed"><b>实战：</b>{w.practice}</p>
+                        <p className="text-[10px] text-[#6f6a58]">依据：{w.source}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-[#8d8670] leading-relaxed">未检测到专旺、从格、化气、两神成象的明显特征——以正格（{chart.geju.name}）论命。若直觉格局有异，重点人工复核：日主是否真的无根、月支是否被会局改气、五合是否真化。</p>
+                )}
+              </div>
+              {zone(6)}
             </StepCard>
 
             {/* ⑦ 十神读人 */}
@@ -479,7 +540,7 @@ export function BaziApp() {
                   <div key={k} className="text-[11px] border border-[#32281a] rounded px-2 py-1.5 bg-[#1d1912]"><b>{k}</b>：{v}</div>
                 ))}
               </div>
-              <Basis text="《渊海子平》：以日干为主论十神六亲——正印为母、偏财为父、男命正财为妻、女命正官为夫、食伤为子女、比劫为兄弟；宫位配年月日时四限（《千里命稿》）。" />
+              {zone(7)}
             </StepCard>
 
             {/* ⑧ 刑冲合害 */}
@@ -506,17 +567,37 @@ export function BaziApp() {
                 <p>② <b>冲喜则凶、冲忌则吉</b>：冲本身无吉凶——冲去忌神是「冲开束缚」，冲去喜用是「釜底抽薪」。上方每条已按本盘喜忌标注。</p>
                 <p>③ <b>冲库则开</b>：辰戌丑未为四库，逢冲如开库门，库中所藏（财库/印库）得以取用。半合/缺一脚的三合是「伏笔」，岁运补齐之年即是应期（到第 12 步兑现）。</p>
               </Teach>
-              <Basis text="《三命通会》论干支刑冲合害；《渊海子平》：「太岁伤日干，有祸必轻；日犯岁君，灾殃必重」——关系是机关引线，原局为库、岁运为引。" />
+              {zone(8)}
             </StepCard>
 
             {/* ⑨ 神煞标注 */}
             <StepCard step={STEPS[8]} open={isOpen(9)} onToggle={() => toggle(9)} ask={askFor(9)}>
               <Teach title="神煞怎么用才不跑偏？">
                 <p>神煞是<b>应象的润色笔，不是定吉凶的判官</b>——「只润色不定性，组合有根才显灵」。如天乙贵人须身旺有根方能得力；桃花本身无吉凶，落在夫妻宫逢合才应婚恋。</p>
-                <p>本盘神煞分布：{chart.pillars.map((p) => `${p.name}【${p.shensha.join('、') || '无'}】`).join('；')}。</p>
                 <p>空亡{chart.kong.join('')}：空者，虚而不实——喜神逢空减力、忌神逢空反吉；空亡之字待流年「填实」（值年）或「冲实」而应事。</p>
               </Teach>
-              <Basis text="《三命通会》神煞总论：「凡看命，以五行生克为主，神煞为辅」；驿马主动、桃花主人缘、华盖主孤高、魁罡主果断，皆作剧情素材看。" />
+              {/* 本盘神煞逐条详解 */}
+              {shaGroups.size > 0 && (
+                <div className="space-y-1.5 mb-3">
+                  {[...shaGroups.entries()].map(([name, where]) => {
+                    const info = shenshaInfo(name);
+                    if (!info) return null;
+                    const toneBadge = info.tone === 'good' ? 'bg-emerald-400/15 text-emerald-300' : info.tone === 'bad' ? 'bg-red-400/15 text-red-300' : info.tone === 'love' ? 'bg-pink-400/15 text-pink-300' : 'bg-[#242b49] text-[#b0a78c]';
+                    return (
+                      <div key={name} className="border border-[#32281a] rounded-lg bg-[#1d1912] px-3 py-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`text-[11px] font-bold rounded px-1.5 ${toneBadge}`}>{info.name}</span>
+                          <span className="text-[10px] text-[#6f6a58]">临{where.join('、')}</span>
+                        </div>
+                        <p className="text-[10px] text-[#7d7663] mt-1"><b>查法：</b>{info.chafa}</p>
+                        <p className="text-[11px] text-[#a89f86] leading-relaxed mt-0.5">{info.explain}</p>
+                        <p className="text-[11px] text-[#93a0bd] leading-relaxed"><b>实战：</b>{info.practice}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {zone(9)}
             </StepCard>
 
             {/* ⑩ 排大运 */}
@@ -534,7 +615,7 @@ export function BaziApp() {
                   </div>
                 ))}
               </div>
-              <Basis text="《千里命稿·起运篇》：阳男阴女顺行、阴男阳女逆行，三日折一年起运；《三命通会》「命好不如运好」，命为车、运为路。" />
+              {zone(10)}
             </StepCard>
 
             {/* ⑪ 大运分析 */}
@@ -560,7 +641,7 @@ export function BaziApp() {
                   </div>
                 ))}
               </div>
-              <Basis text="吉凶看喜忌，应象看十神+作用（《三命通会》论大运）。运逢喜用为吉运，逢忌神为逆运，平运守成；「引爆点」即运与原局冲合之字，是该运应事的阀门。" />
+              {zone(11)}
             </StepCard>
 
             {/* ⑫ 流年应期 */}
@@ -585,7 +666,7 @@ export function BaziApp() {
                   </div>
                 ))}
               </div>
-              <Basis text="《渊海子平》「太岁乃一年之主宰」；应期核心：原局有的，岁运引动则发。过去年份可对照已发生之事反推验证——对得上，说明强弱用神判对了。" />
+              {zone(12)}
             </StepCard>
 
             {/* ⑬ 流月细化 */}
@@ -605,7 +686,8 @@ export function BaziApp() {
               ) : (
                 <p className="text-xs text-[#6f6a58] mb-3">{nowYear} 年十二月支与原局、太岁均无冲合，年内平顺少波澜。</p>
               )}
-              <Basis text="流月以节气换月（每月 15 日近似取月建，误差±1天）；应期到月即可，流日流时过细，教学从略。" />
+              <p className="text-[10px] text-[#6f6a58] mb-2">流月以节气换月（每月 15 日近似取月建，误差±1天）；应期到月即可，流日流时过细，速查从略。</p>
+              {zone(13)}
             </StepCard>
 
             {/* ⑭ 综合论命 */}
@@ -618,7 +700,7 @@ export function BaziApp() {
                 buttonText="生成 AI 命理解读"
                 askText="请基于以上命盘数据，结合我想了解的方面，做完整命理解读（含过去关键大运流年的回顾验证与未来几年的预测）。"
               />
-              <Basis text="AI 解读依据：《四柱预测学》《千里命稿》《渊海子平》《子平真诠》《滴天髓》《穷通宝鉴》《三命通会》《神峰通考》八部典籍的论命体系（模型按典籍方法解读，原文未内置）。" />
+              {zone(14)}
             </StepCard>
           </section>
 
@@ -674,7 +756,7 @@ export function BaziApp() {
 
           <footer className="text-[10px] text-[#6f6a58] leading-relaxed border-t border-[#3a2f1e] pt-3 pb-6">
             说明：本模块排盘规则（真太阳时经度修正与均时差、立春换年、节气换月、五虎遁五鼠遁、十神、藏干、地势自坐、神煞、胎元、纳音、旬空、月令取格、刑冲合害、大运顺逆与起运、流年流月引动）均出自子平法传统体系；
-            旺衰为得令50/得地30/得势20的教学量化模型，用神四通道与应期触发为教学简化判定，细论须人工参看合化、通关与调候。八字是传统术数的趋势参考，命好不如运好，运好不如心态好，具体人生抉择以现实努力与专业意见为准。
+            旺衰为得令50/得地30/得势20的教学量化模型，用神四通道与应期触发为教学简化判定；外格（从化专旺等）为启发式初筛，真格假格与细论须人工参看合化、通关与调候。每步「实战区」为命理师日常用法与派别经验，非经典原文，已与「经典区」分开展示。八字是传统术数的趋势参考，命好不如运好，运好不如心态好，具体人生抉择以现实努力与专业意见为准。
           </footer>
 
           {/* 全局助教 */}

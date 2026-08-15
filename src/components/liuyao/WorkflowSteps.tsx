@@ -1,14 +1,17 @@
 // 教学版工作流：九步排盘断卦，每步讲清「怎么推、为什么这么推、依据在哪」
+// 每步附双区知识层：经典区（课程歌诀规则+逐句白话解读）/ 实战区（课程外典籍与派别用法）
 import { useState } from 'react';
 import { wangShuaiLabel } from '../../lib/liuyao/engine';
 import type { PaiPan, LineInfo } from '../../lib/liuyao/engine';
 import type { Interpretation } from '../../lib/liuyao/interpret';
 import { HexagramFigure } from './YaoStroke';
-import { ChevronDown, ChevronRight, BookOpen, GraduationCap, ScrollText } from 'lucide-react';
+import { ChevronDown, ChevronRight, GraduationCap } from 'lucide-react';
 import { BRANCH_ELEMENT, elemRelation, LIUSHEN_ELEMENT, SEASON_WANG, CHANGSHENG_START, BRANCHES, TRIGRAM_NATURE } from '../../lib/liuyao/constants';
 import { palaceWalk } from '../../lib/liuyao/teaching';
 import { StepAsk, AiVerdict } from './TutorChat';
 import { buildGuaContext, buildSystemPrompt, buildVerdictPrompt } from '../../lib/liuyao/tutorContext';
+import { LIUYAO_STEP_KNOWLEDGE } from '../../lib/liuyao/knowledge';
+import { StepZones } from '../StepZones';
 
 interface Step { no: number; title: string; subtitle: string }
 
@@ -24,16 +27,6 @@ const STEPS: Step[] = [
   { no: 9, title: '综合断卦', subtitle: '吉凶应期 · 卦义佐证' },
 ];
 
-/** 课程依据框 */
-function Basis({ text }: { text: string }) {
-  return (
-    <div className="mt-2 flex gap-1.5 items-start text-xs text-[#8d8670] bg-[#201a12] border border-[#32281a] rounded px-2 py-1.5">
-      <BookOpen size={12} className="mt-0.5 shrink-0" />
-      <span><span className="font-semibold">依据：</span>{text}</span>
-    </div>
-  );
-}
-
 /** 教学推演框：这一步是怎么算出来的 */
 function Teach({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -42,19 +35,6 @@ function Teach({ title, children }: { title: string; children: React.ReactNode }
         <GraduationCap size={13} /> {title}
       </div>
       <div className="text-xs text-[#a7c4b2] space-y-1 leading-relaxed">{children}</div>
-    </div>
-  );
-}
-
-/** 规则歌诀框 */
-function Rule({ text, note }: { text: string; note?: string }) {
-  return (
-    <div className="mt-2 border border-[#474025] bg-[#201a12] rounded px-3 py-2">
-      <div className="flex items-center gap-1.5 text-xs font-bold text-[#d4b578] mb-0.5">
-        <ScrollText size={12} /> 规则 · 歌诀
-      </div>
-      <div className="text-xs text-[#d4c294] leading-relaxed" style={{ fontFamily: '"Songti SC",serif' }}>{text}</div>
-      {note && <div className="text-[10px] text-[#7d7663] mt-0.5">{note}</div>}
     </div>
   );
 }
@@ -112,6 +92,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
   const mElem = BRANCH_ELEMENT[g.monthBranch];
   const guaCtx = buildGuaContext(p, it, question);
   const askFor = (n: number) => <StepAsk stepNo={n} stepTitle={STEPS[n - 1].title} systemPrompt={buildSystemPrompt(n)} guaContext={guaCtx} />;
+  const zone = (n: number) => <StepZones knowledge={LIUYAO_STEP_KNOWLEDGE[n]} />;
 
   return (
     <div>
@@ -164,7 +145,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
           <p>③ 上下相重查六十四卦即得「{p.benGua.info.name}」（{p.benGua.upper}上{p.benGua.lower}下）。</p>
           <p>④ 老阳老阴是「物极必反」之爻，阳到极点转阴、阴到极点转阳，故称<b>动爻</b>。把动爻阴阳翻转，得变卦{p.bianGua ? `「${p.bianGua.info.name}」，读作「${p.benGua.info.name}之${p.bianGua.info.name}」` : '（本卦六爻安静，无变卦）'}。本卦表现时之象，变卦主最终变化之象。</p>
         </Teach>
-        <Rule text="一个背两个字称作单为少阳；两个背一个字称作拆为少阴；三个背称作重为老阳（变爻）；三个字称作交为老阴（变爻）。共摇六次，第一次为初爻画在最下，第六次为上爻。" note="卷三·第五课摇卦起卦法。易学重意不重形，字阳背阴或字阴背阳，摇卦前定义好皆可。" />
+        {zone(1)}
       </StepCard>
 
       {/* ============ 步骤 2：定时定局 ============ */}
@@ -185,12 +166,12 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
           <li>· {g.day}日在<b>{xunText(p)}</b>，旬空在 <b>{p.kong[0]}、{p.kong[1]}</b>。</li>
         </ul>
         <Teach title="这一步怎么推？">
-          <p>① <b>年柱</b>：干支历以立春为岁首——{g.jieqi === '立春' || true ? `当前${g.year[0] === '丙' ? '丙午' : g.year}年柱` : ''}；立春前出生/摇卦要归上一年。</p>
+          <p>① <b>年柱</b>：干支历以立春为岁首——当前{g.year}年柱；立春前出生/摇卦要归上一年。</p>
           <p>② <b>月柱</b>：不以农历初一换月，而以「节」换月——立春寅月、惊蛰卯月、清明辰月、立夏巳月、芒种午月、小暑未月、立秋申月、白露酉月、寒露戌月、立冬亥月、大雪子月、小寒丑月。摇卦时已交<b>{g.jieqi}</b>节，故月建为<b>{g.monthBranch}</b>。月干用五虎遁：甲己之年丙作首（正月丙寅起），乙庚戊寅、丙辛庚寅、丁壬壬寅、戊癸甲寅，顺推至{g.monthBranch}月得{g.month}。</p>
           <p>③ <b>时柱</b>：时支由钟点定（23-1点子时、1-3点丑时……）；时干用五鼠遁由日干起：甲己还加甲（甲子时起）、乙庚丙作初、丙辛从戊起、丁壬庚子居、戊癸壬子真途。{g.dayStem}日起{hourStart(g.dayStem)}子时，顺数至{g.hourBranch}时得{g.hour}。</p>
           <p>④ <b>旬空</b>：六十甲子分六旬，每旬十天干配十二地支必剩两支落空。{g.day}日属{xunText(p)}，本旬十日为{xunDays(p)}，故{p.kong[0]}、{p.kong[1]}二支不在旬中，为空亡。</p>
         </Teach>
-        <Rule text="月建司权：月令是卦爻的提纲，操持着生杀之权；日辰当令：日辰决定卦中每一爻的旺衰，依据五行生旺墓绝衡量。节令前为上个月，一交节令后就成了下一个月。" note="卷三·第十一课；习题卷问答题53/54/58" />
+        {zone(2)}
       </StepCard>
 
       {/* ============ 步骤 3：定宫安世应 ============ */}
@@ -219,7 +200,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
           <p>② <b>安世应</b>：世爻位置就是「变到第几爻」的位置——本宫卦世在上爻，一世卦世在初爻……五世卦世在五爻；游魂变在四爻故世在四爻，归魂内卦复归故世在三爻。应爻与世爻恒隔三爻（隔两位）：世{POS_N[p.shiPos]}则应{POS_N[p.yingPos]}。世为求占者一方，应为对方/所测之事，中间二爻为间爻，主宾主之间的阻隔或媒介。</p>
           <p>③ <b>卦身</b>：世爻为{p.lines[p.shiPos - 1].yang ? '阳' : '阴'}爻，故从{p.lines[p.shiPos - 1].yang ? '子' : '午'}起，自初爻顺数至{POS_N[p.shiPos]}爻（世位），得<b>{p.guaShenBranch}</b>——卦身为「占事之主」，是辅助断卦的第二参照。</p>
         </Teach>
-        <Rule text="八卦之首世六当，以下初爻轮上扬，游魂之卦四爻世，归魂之卦三爻详。阴世则从午月起，阳世则从子月生，欲得识其卦中意，从初数至世方真。" note="卷三·第七课安世应歌诀、第十一课卦身诀" />
+        {zone(3)}
       </StepCard>
 
       {/* ============ 步骤 4：纳甲装卦 ============ */}
@@ -250,7 +231,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
           <p>③ 天干随之：{p.benGua.lower}卦在内纳{NAJIA_STEM(p.benGua.lower, 'inner')}干、{p.benGua.upper}卦在外纳{NAJIA_STEM(p.benGua.upper, 'outer')}干。</p>
           <p>④ 地支既定，五行随支而定（子水、丑土、寅卯木、辰土、巳午火、未土、申酉金、戌土、亥水），各爻五行由此装上。</p>
         </Teach>
-        <Rule text="乾在内子寅辰，乾在外午申戌；坎在内寅辰午，坎在外申戌子；艮在内辰午申，艮在外戌子寅；震在内子寅辰，震在外午申戌。巽在内丑亥酉，巽在外未巳卯；离在内卯丑亥，离在外酉未巳；兑在内巳卯丑，兑在外亥酉未；坤在内未巳卯，坤在外丑亥酉。" note="卷三·第八课。八纯卦按阳顺阴逆从初爻排起，其余五十六卦上卦用上卦纳支、下卦用下卦纳支" />
+        {zone(4)}
       </StepCard>
 
       {/* ============ 步骤 5：配六亲六神 ============ */}
@@ -280,7 +261,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
           <p>② <b>变卦六亲随主宫</b>：变爻的地支按变卦纳支重排，但「我」仍是主卦{p.palace}宫{p.palaceElement}，不依变卦的宫——这是初学者最易错之处。</p>
           <p>③ <b>六神</b>只看日干：{g.dayStem}日属「{LIUSHEN_QI_GROUP(g.dayStem)}」，自初爻起{l.liushenOfStart(g.dayStem)}，按 青龙→朱雀→勾陈→螣蛇→白虎→玄武 顺序向上排一周。六神为附合之神，参断事物性质与方位，不可专以六神断吉凶。</p>
         </Teach>
-        <Rule text="生我者为父母、比和者为兄弟、我生者为子孙、我克者为妻财、克我者为官鬼。甲乙起青龙，丙丁起朱雀，戊日起勾陈，己日起腾蛇，庚辛起白虎，壬癸起玄武。" note="卷三·第九课/第十课。《千金赋》：虎兴而遇吉神不害其吉，龙动而逢凶曜难掩其凶" />
+        {zone(5)}
       </StepCard>
 
       {/* ============ 步骤 6：查动静参数 ============ */}
@@ -299,7 +280,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
           <p>③ <b>月破有救</b>：月破之爻眼下虽破，出月不破，逢合、填实之日可解；只有静而休囚、又值旬空、反遭克害才是真破。</p>
           <p>④ <b>互卦{p.huGua?.name}</b>：取本卦二三四爻为下卦、三四五爻为上卦重叠而成，主人事物的中间变化过程，可参看事态中途的走向。</p>
         </Teach>
-        <Rule text="旺不为空，动不为空，有日建动爻生扶者不空；月破为空，有气无动为空，伏而受克为空，真空为空。日破是休囚逢冲不易动，暗动逢冲即动。" note="卷三·第十一课" />
+        {zone(6)}
       </StepCard>
 
       {/* ============ 步骤 7：取用神 ============ */}
@@ -316,7 +297,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
           <p>③ <b>用神双现</b>按优先级取舍：<b>动爻（皆动取旺）＞持世＞持应＞离世近（同距取旺）</b>；另有旬空、月破、破伤者舍之。</p>
           <p>④ <b>用神不上卦</b>：六十四卦中六亲并非每卦俱全，缺则向本宫首卦（纯卦六亲皆全）借，借来之爻叫<b>伏神</b>，被伏之爻叫<b>飞神</b>；再按「伏神有用论」断其能否得力：得日月生、得飞神生、飞神空破休囚者有用；被飞神克、休囚旬空者无用。</p>
         </Teach>
-        <Rule text="舍其闲爻，用其持世；舍其休囚，用其旺相；舍其静爻，用其动爻；舍其月破，用其不破；舍其旬空，用其不空；舍其破伤，用其不伤。" note="卷四·第五课用神双现诀。取用神是断卦第一步，用神搞错则全盘皆错（习题卷29）" />
+        {zone(7)}
       </StepCard>
 
       {/* ============ 步骤 8：旺衰生克 ============ */}
@@ -347,7 +328,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
           <p>③ <b>动静加减</b>：发动增力，化进神、化回头生再增；化退神、化回头克、动而化空递减；旬空月破日破视真假再折。</p>
           <p>④ <b>原忌仇三方角力</b>：原神是用神的源头（无源之水难久），忌神是用神的克星（宜静不宜兴），仇神伤原生忌（助纣为虐）。三者谁旺谁动，往往直接改写用神吉凶。若原神忌神同动，则忌神生原神、原神生用神，连续相生反吉。</p>
         </Teach>
-        <Rule text="当令者旺，令生者相，生令者休，克令者囚，令克者死。原神是生助用神的爻，忌神是克用神的爻；哪一个更旺更有力，就将对用神的吉凶起决定性作用。" note="卷一·第三十八课；卷四·第二课" />
+        {zone(8)}
       </StepCard>
 
       {/* ============ 步骤 9：综合断卦 ============ */}
@@ -392,7 +373,7 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
           })}
           <div className="text-[#8d8670]">（卦辞卦义引自卷二·第七课《六十四卦解析》）</div>
         </div>
-        <Basis text="习题卷问答题65：以用神为主线，兼看世、应，主要分析五行的生克冲合关系，还要考虑月建、日辰对爻的影响，以及爻的旺相休囚、动变、旬空、月破、暗动等情况，同时结合六神、卦象等综合判断。" />
+        {zone(9)}
       </StepCard>
     </div>
   );
