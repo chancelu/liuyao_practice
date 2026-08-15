@@ -20,7 +20,7 @@ export function buildBaziContext(c: BaZiChart, focus?: string): string {
   const lines: string[] = [];
   lines.push('【当前命盘】');
   if (focus?.trim()) lines.push(`想了解的方面：「${focus.trim()}」`);
-  lines.push(`${c.genderLabel}（${c.gender === 'male' ? '男' : '女'}命）：${g.year}年 ${g.month}月 ${g.day}日 ${g.hour}时（${g.jieqi}节后，日柱旬空${c.kong.join('')}，胎元${c.taiyuan}）`);
+  lines.push(`${c.genderLabel}（${c.gender === 'male' ? '男' : '女'}命）：${g.year}年 ${g.month}月 ${g.day}日 ${g.hour}时（${g.jieqi ? `${g.jieqi}节后，` : '干支直排，'}日柱旬空${c.kong.join('')}，胎元${c.taiyuan}）`);
   lines.push(`日主：${c.dayMaster}${c.dayMasterElement}，生于${g.monthBranch}月（${c.deLing ? '得令' : '失令'}），旺衰三因子合计 ${c.strength.total}/100，判为「${c.strength.label}」`);
   lines.push(`格局：${c.geju.name}${c.geju.touGan ? `（月令人元${c.geju.touGan}透干而取）` : '（月令人元不透，以主气立格）'}；取格推演：${c.geju.steps.join('；')}`);
   if (c.relations.length) {

@@ -495,8 +495,46 @@ function analyzeStrength(
 }
 
 // ============ 排盘主函数 ============
+/** 干支合法性校验：必须是六十甲子组合（阴阳相配） */
+export function gzValid(gz: string): boolean {
+  if (gz.length !== 2) return false;
+  const s = STEMS.indexOf(gz[0] as never);
+  const b = BRANCHES.indexOf(gz[1] as never);
+  return s >= 0 && b >= 0 && s % 2 === b % 2;
+}
+
+/** 年柱干支对应的候选出生年（1901–2099，干支直排时供选填） */
+export function yearCandidates(yearGz: string): number[] {
+  const idx = gzIndexOf(yearGz[0], yearGz[1]);
+  const out: number[] = [];
+  for (let y = 1901; y <= 2099; y++) if ((((y - 4) % 60) + 60) % 60 === idx) out.push(y);
+  return out;
+}
+
+export interface ManualPaiPanOpts { qiyunAge?: number; birthYear?: number }
+
+/** 干支直排：已知四柱干支直接排盘（只知八字不知生日的验证场景） */
+export function paipanBaziManual(pillarsGz: [string, string, string, string], gender: 'male' | 'female', opts: ManualPaiPanOpts = {}): BaZiChart {
+  for (const g of pillarsGz) if (!gzValid(g)) throw new Error(`非法干支组合：${g}`);
+  const [year, month, day, hour] = pillarsGz;
+  const gz: GanZhi = {
+    year, month, day, hour,
+    yearIndex: gzIndexOf(year[0], year[1]),
+    monthIndex: gzIndexOf(month[0], month[1]),
+    dayIndex: gzIndexOf(day[0], day[1]),
+    hourIndex: gzIndexOf(hour[0], hour[1]),
+    monthBranch: month[1], dayBranch: day[1], dayStem: day[0], hourBranch: hour[1],
+    jieqi: '',
+  };
+  return buildChart(gz, gender, null, opts);
+}
+
+/** 按出生日期时间排盘 */
 export function paipanBazi(date: Date, gender: 'male' | 'female'): BaZiChart {
-  const gz = computeGanZhi(date);
+  return buildChart(computeGanZhi(date), gender, date, {});
+}
+
+function buildChart(gz: GanZhi, gender: 'male' | 'female', date: Date | null, opts: ManualPaiPanOpts): BaZiChart {
   const dayMaster = gz.dayStem;
   const dmElem = STEM_ELEMENT[dayMaster];
   const kong = xunKong(gz.dayIndex);
@@ -548,14 +586,23 @@ export function paipanBazi(date: Date, gender: 'male' | 'female'): BaZiChart {
   const dayunDir = forward ? '顺行' : '逆行';
 
   // 起运数：顺行数到下一个节，逆行数到上一个节，三天折一年（《三命通会》）
-  const y = date.getFullYear(), m = date.getMonth() + 1, d = date.getDate();
-  const { prev, next } = nearbyJie(y, m, d);
-  const target = forward ? next : prev;
-  const birth = new Date(y, m - 1, d).getTime();
-  const [ty, tm, td] = target.date.split('-').map(Number);
-  const days = Math.abs(Math.round((new Date(ty, tm - 1, td).getTime() - birth) / 86400000));
-  const qiyunAge = Math.round((days / 3) * 10) / 10;
-  const qiyunNote = `${forward ? '顺行，自生日数至下一个节' : '逆行，自生日数回上一个节'}「${target.name}」（${target.date}），相距约 ${days} 天，三日折一年，约 ${qiyunAge} 岁起运（节气为近似日期，误差±1天）`;
+  // 干支直排模式无出生日期：起运岁数手动输入，未填出生年则大运不标注年份
+  let qiyunAge: number; let qiyunNote: string; let birthYear: number | null;
+  if (date) {
+    const y = date.getFullYear(), m = date.getMonth() + 1, d = date.getDate();
+    const { prev, next } = nearbyJie(y, m, d);
+    const target = forward ? next : prev;
+    const birth = new Date(y, m - 1, d).getTime();
+    const [ty, tm, td] = target.date.split('-').map(Number);
+    const days = Math.abs(Math.round((new Date(ty, tm - 1, td).getTime() - birth) / 86400000));
+    qiyunAge = Math.round((days / 3) * 10) / 10;
+    qiyunNote = `${forward ? '顺行，自生日数至下一个节' : '逆行，自生日数回上一个节'}「${target.name}」（${target.date}），相距约 ${days} 天，三日折一年，约 ${qiyunAge} 岁起运（节气为近似日期，误差±1天）`;
+    birthYear = y;
+  } else {
+    qiyunAge = opts.qiyunAge ?? 6;
+    birthYear = opts.birthYear ?? null;
+    qiyunNote = `干支直排模式：无出生日期，未按节气折算，起运岁数取手动输入的 ${qiyunAge} 岁${birthYear ? '' : '；未选出生年，大运流年仅按虚岁展示，不标注公历年份与当前运'}`;
+  }
 
   const monthIdx = gzIndexOf(gz.month[0], gz.month[1]);
   const dayun: DaYunItem[] = [];
@@ -566,7 +613,7 @@ export function paipanBazi(date: Date, gender: 'male' | 'female'): BaZiChart {
     dayun.push({
       gz: dg, stem: dg[0], branch: dg[1],
       shiShen: shiShen(dayMaster, dg[0]),
-      startAge, startYear: y + startAge,
+      startAge, startYear: birthYear ? birthYear + startAge : 0,
     });
   }
 

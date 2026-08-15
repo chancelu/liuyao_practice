@@ -1,12 +1,13 @@
 // 八字教学页：排盘 + 十三步教学流程（双区知识层：经典区+实战区）+ 领域速查 + 互洽清单 + 歌诀 + AI 助教
 import { useMemo, useState } from 'react';
-import { paipanBazi, ELEMENTS, STEM_NATURE } from '../../lib/bazi/engine';
+import { paipanBazi, paipanBaziManual, gzValid, yearCandidates, ELEMENTS, STEM_NATURE } from '../../lib/bazi/engine';
 import type { BaZiChart, RelationItem } from '../../lib/bazi/engine';
 import { analyzeYongshen, analyzeDayun, analyzeLiunian, analyzeLiuyue } from '../../lib/bazi/forecast';
 import { gejuDetail, QU_GE_RULES } from '../../lib/bazi/geju';
 import { shenshaInfo } from '../../lib/bazi/shensha';
 import { BAZI_STEP_KNOWLEDGE } from '../../lib/bazi/knowledge';
 import { StepZones } from '../StepZones';
+import { STEMS, BRANCHES } from '../../lib/liuyao/constants';
 import type { Element5 } from '../../lib/liuyao/constants';
 import { buildBaziContext, buildBaziSystemPrompt, buildBaziReadingPrompt, BAZI_BOOKS } from '../../lib/bazi/tutorContext';
 import { StepAsk, TutorPanel, AiVerdict } from '../liuyao/TutorChat';
@@ -119,17 +120,28 @@ const SEASON_OF: Record<string, string> = { 寅: '春', 卯: '春', 辰: '春末
 const ZHEN_CLS = { 真: 'bg-emerald-400/15 text-emerald-300', 假: 'bg-amber-400/15 text-amber-300', 存疑: 'bg-[#242b49] text-[#b0a78c]' } as const;
 
 export function BaziApp() {
+  const [mode, setMode] = useState<'date' | 'manual'>('date'); // date=生辰排盘 / manual=干支直排
   const [date, setDate] = useState('2000-01-01');
   const [time, setTime] = useState('12:00'); // 钟表时间（北京时间）
   const [place, setPlace] = useState<PlaceSel>(DEFAULT_PLACE);
   const [gender, setGender] = useState<'male' | 'female'>('male');
   const [focus, setFocus] = useState('');
+  // 干支直排状态：四柱干支（默认一组合法干支）+ 手动起运岁数 + 选填出生年
+  const [mgz, setMgz] = useState<[string, string, string, string]>(['甲子', '丙寅', '戊午', '庚申']);
+  const [qiyunInput, setQiyunInput] = useState(6);
+  const [birthYearInput, setBirthYearInput] = useState<number | 0>(0); // 0=不确定
   const [openSteps, setOpenSteps] = useState<number[]>([1, 3, 4, 14]);
   const [tutorOpen, setTutorOpen] = useState(false);
   const nowYear = new Date().getFullYear();
 
+  const manualErr = mode === 'manual' ? (mgz.find((g) => !gzValid(g)) ? '干支组合不合法：天干与地支须阴阳相配（六十甲子内）' : '') : '';
+
   const chart: BaZiChart | null = useMemo(() => {
     try {
+      if (mode === 'manual') {
+        if (mgz.some((g) => !gzValid(g))) return null;
+        return paipanBaziManual(mgz, gender, { qiyunAge: qiyunInput, birthYear: birthYearInput || undefined });
+      }
       const d = dateTimeOf(date, time);
       if (!d) return null;
       // 真太阳时校正：出生地经度修正 + 均时差
@@ -139,7 +151,7 @@ export function BaziApp() {
       console.error(e);
       return null;
     }
-  }, [date, time, place, gender]);
+  }, [mode, date, time, place, gender, mgz, qiyunInput, birthYearInput]);
 
   const analysis = useMemo(() => {
     if (!chart) return null;
@@ -154,7 +166,7 @@ export function BaziApp() {
   const isOpen = (n: number) => openSteps.includes(n);
 
   if (!chart || !analysis) {
-    return <div className="bg-red-400/10 border border-red-400/25 text-red-700 rounded-lg p-4 text-sm">出生时间有误，无法排盘。</div>;
+    return <div className="bg-red-400/10 border border-red-400/25 text-red-700 rounded-lg p-4 text-sm">{manualErr || '出生时间有误，无法排盘。'}</div>;
   }
   const { yong, dy, ln, ly } = analysis;
 
@@ -190,8 +202,19 @@ export function BaziApp() {
       <main className="max-w-7xl mx-auto px-4 py-5 grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-5 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
         {/* 左：输入 */}
         <aside className="panel p-4 lg:h-full lg:overflow-y-auto">
-          <div className="section-head"><span className="num text-base">壹</span><span className="title">生辰输入</span></div>
+          <div className="section-head"><span className="num text-base">壹</span><span className="title">排盘输入</span></div>
           <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-[#c8bd9c] mb-1.5">输入方式</label>
+              <div className="grid grid-cols-2 gap-1.5">
+                {([['date', '生辰排盘'], ['manual', '干支直排']] as const).map(([v, label]) => (
+                  <button key={v} onClick={() => setMode(v)}
+                    className={`text-sm py-2 rounded-lg border transition-colors ${mode === v ? 'border-[#c9a962] bg-gradient-to-b from-[#e3c98a] to-[#b08d48] text-[#1a1408] font-bold' : 'border-[#3a2f1e] bg-[#131008] text-[#b0a78c] hover:border-[#c9a962]/60'}`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div>
               <label className="block text-xs font-semibold text-[#c8bd9c] mb-1.5">性别（定乾造/坤造与大运顺逆）</label>
               <div className="grid grid-cols-2 gap-1.5">
@@ -203,9 +226,50 @@ export function BaziApp() {
                 ))}
               </div>
             </div>
-            <div>
-              <SolarTimeInput date={date} setDate={setDate} time={time} setTime={setTime} place={place} setPlace={setPlace} />
-            </div>
+            {mode === 'date' ? (
+              <div>
+                <SolarTimeInput date={date} setDate={setDate} time={time} setTime={setTime} place={place} setPlace={setPlace} />
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                <div>
+                  <label className="block text-xs font-semibold text-[#c8bd9c] mb-1.5">四柱干支（只知八字不知生日时用）</label>
+                  <div className="space-y-1.5">
+                    {(['年柱', '月柱', '日柱', '时柱'] as const).map((label, idx) => (
+                      <div key={label} className="flex items-center gap-1.5">
+                        <span className="text-xs text-[#8d8670] w-8 shrink-0">{label}</span>
+                        <select value={mgz[idx][0]}
+                          onChange={(e) => setMgz((prev) => { const n = [...prev] as [string, string, string, string]; n[idx] = e.target.value + n[idx][1]; return n; })}
+                          className="flex-1 border border-[#3a2f1e] rounded bg-[#131008] px-2 py-1.5 text-sm text-[#e8e1cd] focus:outline-none focus:border-[#c9a962]">
+                          {STEMS.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <select value={mgz[idx][1]}
+                          onChange={(e) => setMgz((prev) => { const n = [...prev] as [string, string, string, string]; n[idx] = n[idx][0] + e.target.value; return n; })}
+                          className="flex-1 border border-[#3a2f1e] rounded bg-[#131008] px-2 py-1.5 text-sm text-[#e8e1cd] focus:outline-none focus:border-[#c9a962]">
+                          {BRANCHES.map((b) => <option key={b} value={b}>{b}</option>)}
+                        </select>
+                        <span className="text-sm font-bold w-8 text-[#c9a962]" style={{ fontFamily: '"Songti SC",serif' }}>{gzValid(mgz[idx]) ? mgz[idx] : '⚠'}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {manualErr && <p className="mt-1 text-[11px] text-red-700">{manualErr}</p>}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#c8bd9c] mb-1.5">起运岁数（无生日无法按节气折算，手动输入）</label>
+                  <input type="number" min={0} max={15} step={0.5} value={qiyunInput}
+                    onChange={(e) => setQiyunInput(Math.max(0, Math.min(15, Number(e.target.value) || 0)))}
+                    className="w-full border border-[#3a2f1e] rounded-md bg-[#131008] px-3 py-2 text-sm text-[#e8e1cd] focus:outline-none focus:border-[#c9a962]" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#c8bd9c] mb-1.5">出生年（选填，用于定位大运/流年与当前运）</label>
+                  <select value={birthYearInput} onChange={(e) => setBirthYearInput(Number(e.target.value))}
+                    className="w-full border border-[#3a2f1e] rounded-md bg-[#131008] px-3 py-2 text-sm text-[#e8e1cd] focus:outline-none focus:border-[#c9a962]">
+                    <option value={0}>不确定（仅按虚岁展示大运）</option>
+                    {gzValid(mgz[0]) && yearCandidates(mgz[0]).map((y) => <option key={y} value={y}>{y} 年（{mgz[0]}年）</option>)}
+                  </select>
+                </div>
+              </div>
+            )}
             <div>
               <label className="block text-xs font-semibold text-[#c8bd9c] mb-1.5">想了解的方面（选填，AI 解读会侧重）</label>
               <input value={focus} onChange={(e) => setFocus(e.target.value)}
@@ -611,7 +675,7 @@ export function BaziApp() {
                 {chart.dayun.map((d) => (
                   <div key={d.gz} className="border border-[#32281a] rounded px-2 py-1.5 bg-[#1d1912] text-center">
                     <div className="font-bold text-sm" style={{ fontFamily: '"Songti SC",serif' }}>{d.gz} <span className="text-[10px] font-normal text-[#8d8670]">{d.shiShen}</span></div>
-                    <div className="text-[10px] text-[#8d8670]">{d.startAge}–{d.startAge + 9} 岁（约 {d.startYear} 年起）</div>
+                    <div className="text-[10px] text-[#8d8670]">{d.startAge}–{d.startAge + 9} 岁{d.startYear > 0 && `（约 ${d.startYear} 年起）`}</div>
                   </div>
                 ))}
               </div>
@@ -628,7 +692,7 @@ export function BaziApp() {
                   <div key={d.gz} className={`border rounded-lg px-3 py-2 ${d.current ? 'border-[#c9a962] bg-[#2c2417]' : 'border-[#32281a] bg-[#1d1912]'}`}>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-bold text-sm" style={{ fontFamily: '"Songti SC",serif' }}>{d.gz}</span>
-                      <span className="text-[10px] text-[#8d8670]">{d.shiShen} · {d.startAge}–{d.startAge + 9}岁（{d.startYear}–{d.startYear + 9}）</span>
+                      <span className="text-[10px] text-[#8d8670]">{d.shiShen} · {d.startAge}–{d.startAge + 9}岁{d.startYear > 0 && `（${d.startYear}–${d.startYear + 9}）`}</span>
                       <span className={`text-[10px] font-bold rounded px-1 ${TONE_CLS[d.tone]}`}>{d.tone}</span>
                       {d.current && <span className="text-[10px] bg-[#c9a962] text-white rounded px-1">当前</span>}
                     </div>

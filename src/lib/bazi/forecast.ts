@@ -211,7 +211,7 @@ export function analyzeDayun(c: BaZiChart, yong: YongshenResult, nowYear: number
     return {
       ...d, stemElem, branchElem, tone, hits,
       theme: SHISHEN_THEME[d.shiShen] ?? '',
-      current: nowYear >= startYear && nowYear < startYear + 10,
+      current: startYear > 0 && nowYear >= startYear && nowYear < startYear + 10,
     };
   });
 }
@@ -238,7 +238,7 @@ export function analyzeLiunian(c: BaZiChart, yong: YongshenResult, dayunList: Da
     const branch = gz[1];
     const elem = STEM_ELEMENT[stem];
     const ss = shiShen(c.dayMaster, stem);
-    const dy = dayunList.find((d) => year >= d.startYear && year < d.startYear + 10);
+    const dy = dayunList.find((d) => d.startYear > 0 && year >= d.startYear && year < d.startYear + 10);
     const triggers: string[] = [];
     for (const nb of natalBranches) {
       if (nb.gz === gz) triggers.push(`逢值（伏吟${nb.pos}柱${nb.gz}）——该宫位之事反复牵动`);
