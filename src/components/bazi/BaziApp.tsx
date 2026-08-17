@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { paipanBazi, paipanBaziManual, gzValid, yearCandidates, ELEMENTS, STEM_NATURE } from '../../lib/bazi/engine';
 import type { BaZiChart, RelationItem } from '../../lib/bazi/engine';
 import { analyzeYongshen, analyzeDayun, analyzeLiunian, analyzeLiuyue } from '../../lib/bazi/forecast';
-import { gejuDetail, QU_GE_RULES } from '../../lib/bazi/geju';
+import { gejuDetail, careerOf, QU_GE_RULES } from '../../lib/bazi/geju';
 import { shenshaInfo } from '../../lib/bazi/shensha';
 import { BAZI_STEP_KNOWLEDGE } from '../../lib/bazi/knowledge';
 import { StepZones } from '../StepZones';
@@ -36,7 +36,7 @@ const GONG_WEI = [
 
 /** 领域速查表 */
 const DOMAIN_TABLE = [
-  ['事业', '格局类型 + 用神五行 + 官杀状态', '格局定行业类型，用神定方位行业，官杀运定升迁期'],
+  ['事业', '格局类型 + 用神五行 + 官杀状态', '格局定行业类型（职业对照见第 6 步），用神定方位行当，官杀运定升迁期'],
   ['财运', '财星强弱/透藏/空亡 + 求财结构', '食伤生财=技艺变现；财空=待运填实；身旺财弱=财运年发力'],
   ['婚姻', '男看财/女看官 + 日支夫妻宫 + 合冲', '夫妻宫逢合逢冲之年=婚恋应期；伏吟=矛盾反复'],
   ['健康', '五行偏枯处 + 刑冲部位', '过旺过弱的五行对应脏腑；刑冲年应验'],
@@ -187,6 +187,7 @@ export function BaziApp() {
     return hitJi ? '被冲刑之支属忌神一方——冲去忌神，反凶为吉' : '被冲刑之支涉喜用一方——喜用受伤，须防';
   };
   const gejuInfo = gejuDetail(chart.geju.name);
+  const careers = careerOf(chart.geju.name, chart.waige);
   // 神煞归组：名称 → 落宫列表（供第 9 步详解）
   const shaGroups = new Map<string, string[]>();
   for (const p of chart.pillars) {
@@ -585,6 +586,16 @@ export function BaziApp() {
                   <p className="text-[11px] text-[#8d8670] leading-relaxed">未检测到专旺、从格、化气、两神成象的明显特征——以正格（{chart.geju.name}）论命。若直觉格局有异，重点人工复核：日主是否真的无根、月支是否被会局改气、五合是否真化。</p>
                 )}
               </div>
+              {/* 格局-职业象对照（实战派速查） */}
+              {careers.length > 0 && (
+                <div className="border border-[#32281a] rounded-lg bg-[#1d1912] px-3 py-2 mb-3">
+                  <div className="text-xs font-bold text-[#c8bd9c] mb-1.5">格局 → 职业象（实战派速查）</div>
+                  <div className="space-y-1">
+                    {careers.map((c) => <p key={c.slice(0, 8)} className="text-[11px] text-[#a89f86] leading-relaxed">· {c}</p>)}
+                  </div>
+                  <p className="mt-1 text-[10px] text-[#6f6a58]">用法：格局定行业类型，用神五行定具体行当与方位，两者叠加取象；外格成立时以外格为主。</p>
+                </div>
+              )}
               {zone(6)}
             </StepCard>
 

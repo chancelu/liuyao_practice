@@ -11,6 +11,7 @@ import { palaceWalk } from '../../lib/liuyao/teaching';
 import { StepAsk, AiVerdict } from './TutorChat';
 import { buildGuaContext, buildSystemPrompt, buildVerdictPrompt } from '../../lib/liuyao/tutorContext';
 import { LIUYAO_STEP_KNOWLEDGE } from '../../lib/liuyao/knowledge';
+import { findingKnowledge } from '../../lib/liuyao/findingKnowledge';
 import { StepZones } from '../StepZones';
 
 interface Step { no: number; title: string; subtitle: string }
@@ -340,13 +341,25 @@ export function WorkflowSteps({ p, it, yaoNames, question }: { p: PaiPan; it: In
           <p className="text-xs text-[#b0a78c] flex-1">{it.summary}</p>
         </div>
         <div className="space-y-2 mb-3">
-          {it.findings.map((f, i) => (
-            <div key={i} className={`border rounded px-3 py-2 ${KIND_STYLE[f.kind].cls}`}>
-              <div className="font-semibold text-xs mb-0.5">【{KIND_STYLE[f.kind].label}】{f.title}</div>
-              <div className="text-xs opacity-90">{f.detail}</div>
-              <div className="text-[10px] mt-1 opacity-70">依据：{f.basis}</div>
-            </div>
-          ))}
+          {it.findings.map((f, i) => {
+            const fk = findingKnowledge(f.title);
+            return (
+              <div key={i} className={`border rounded px-3 py-2 ${KIND_STYLE[f.kind].cls}`}>
+                <div className="font-semibold text-xs mb-0.5">【{KIND_STYLE[f.kind].label}】{f.title}</div>
+                <div className="text-xs opacity-90">{f.detail}</div>
+                <div className="text-[10px] mt-1 opacity-70">依据：{f.basis}</div>
+                {fk && (
+                  <div className="mt-1.5 space-y-1 border-t border-current/10 pt-1.5">
+                    <div className="text-[11px] leading-relaxed text-[#d4c294]">{fk.strict}</div>
+                    <div className="text-[11px] leading-relaxed text-[#93a0bd]">
+                      {fk.practice}
+                      <span className="ml-1 text-[10px] rounded px-1 bg-[#242b49] text-[#7e90b8]">{fk.school}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
         <div className="text-xs mb-2"><b>世应关系：</b>{it.shiyingNote}</div>
         {it.yingqi.length > 0 && (
