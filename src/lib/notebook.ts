@@ -10,7 +10,7 @@ export interface LiuyaoPayload {
   yaos: YaoValue[];
   date: string;
   time: string;
-  place: PlaceSel;
+  place: PlaceSel | null; // null = 按北京时间（未做真太阳时校正）
   question: string;
   category: string;
 }

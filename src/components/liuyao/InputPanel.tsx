@@ -10,6 +10,7 @@ import { HEXAGRAMS_64 } from '../../data/hexagrams64';
 import { YaoStroke } from './YaoStroke';
 import { classifyQuestion } from './TutorChat';
 import { SolarTimeInput, type PlaceSel } from '../geo/SolarTimeInput';
+import { ScreenshotImport } from '../ScreenshotImport';
 import { Dices, RotateCcw, LibraryBig, Sparkles, Loader2 } from 'lucide-react';
 
 const POS = ['初爻（第1掷）', '二爻（第2掷）', '三爻（第3掷）', '四爻（第4掷）', '五爻（第5掷）', '上爻（第6掷）'];
@@ -30,8 +31,8 @@ export function InputPanel({
   setDate: (s: string) => void;
   time: string;
   setTime: (s: string) => void;
-  place: PlaceSel;
-  setPlace: (p: PlaceSel) => void;
+  place: PlaceSel | null; // null = 不填，按北京时间
+  setPlace: (p: PlaceSel | null) => void;
   question: string;
   setQuestion: (s: string) => void;
   category: string;
@@ -96,6 +97,16 @@ export function InputPanel({
           <button onClick={() => setMode('manual')} className={tabCls('manual')}>手动录入</button>
         </div>
       </div>
+
+      {/* 截图识别导入（Kimi K3 视觉） */}
+      <ScreenshotImport
+        kind="liuyao"
+        onApplyLiuyao={({ yaos: y, date: d, time: t }) => {
+          setYaos(y);
+          if (d) setDate(d);
+          if (t) setTime(t);
+        }}
+      />
 
       {mode === 'pick' ? (
         <>
@@ -259,10 +270,15 @@ export function InputPanel({
         </div>
       </div>
 
-      {/* 摇卦时间：出生地 + 真太阳时校正 */}
+      {/* 摇卦时间与地点（地点选填，不填按北京时间） */}
       <div>
         <label className="block text-xs font-semibold text-[#c8bd9c] mb-1.5">摇卦时间与地点（定月建日辰时柱）</label>
-        <SolarTimeInput date={date} setDate={setDate} time={time} setTime={setTime} place={place} setPlace={setPlace} />
+        <SolarTimeInput
+          date={date} setDate={setDate} time={time} setTime={setTime}
+          place={place} setPlace={setPlace}
+          optional
+          placeLabel="摇卦地点（选填，校正真太阳时）"
+        />
       </div>
     </div>
   );

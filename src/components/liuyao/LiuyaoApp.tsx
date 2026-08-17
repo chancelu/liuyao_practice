@@ -11,7 +11,7 @@ import { WorkflowSteps } from './WorkflowSteps';
 import { GeyueReference } from './GeyueReference';
 import { TutorPanel } from './TutorChat';
 import { buildGuaContext, buildSystemPrompt } from '../../lib/liuyao/tutorContext';
-import { DEFAULT_PLACE, cityAt } from '../../lib/geo/cities';
+import { cityAt } from '../../lib/geo/cities';
 import { solarCorrection, dateTimeOf } from '../../lib/geo/solarTime';
 import type { PlaceSel } from '../geo/SolarTimeInput';
 import { Notebook } from '../Notebook';
@@ -34,7 +34,7 @@ export function LiuyaoApp() {
   const [yaos, setYaosRaw] = useState<YaoValue[]>([9, 8, 8, 9, 7, 6]); // 默认：卷三例卦 泽雷随之风地观
   const [date, setDate] = useState(todayLocal());
   const [time, setTime] = useState(nowTime());
-  const [place, setPlace] = useState<PlaceSel>(DEFAULT_PLACE);
+  const [place, setPlace] = useState<PlaceSel | null>(null); // 摇卦地点选填：null=按北京时间
   const [question, setQuestion] = useState('');
   const [category, setCategory] = useState('caiyun');
   const [activeExample, setActiveExample] = useState('sui_zhiguan');
@@ -55,8 +55,8 @@ export function LiuyaoApp() {
     try {
       const d = dateTimeOf(date, time);
       if (!d) return null;
-      // 真太阳时校正：摇卦地经度修正 + 均时差
-      const corrected = solarCorrection(d, cityAt(place.prov, place.city).lng).corrected;
+      // 真太阳时校正：填了摇卦地点才做经度修正 + 均时差，否则直接按北京时间
+      const corrected = place ? solarCorrection(d, cityAt(place.prov, place.city).lng).corrected : d;
       const gz = computeGanZhi(corrected);
       const p = paipan(yaos, gz);
       const it = interpret(p, category);

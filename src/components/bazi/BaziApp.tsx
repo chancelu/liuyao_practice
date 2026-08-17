@@ -12,6 +12,7 @@ import type { Element5 } from '../../lib/liuyao/constants';
 import { buildBaziContext, buildBaziSystemPrompt, buildBaziReadingPrompt, BAZI_BOOKS } from '../../lib/bazi/tutorContext';
 import { StepAsk, TutorPanel, AiVerdict } from '../liuyao/TutorChat';
 import { SolarTimeInput, type PlaceSel } from '../geo/SolarTimeInput';
+import { ScreenshotImport } from '../ScreenshotImport';
 import { Notebook } from '../Notebook';
 import type { NoteRecord, BaziPayload } from '../../lib/notebook';
 import { DEFAULT_PLACE, cityAt } from '../../lib/geo/cities';
@@ -253,10 +254,19 @@ export function BaziApp() {
             </div>
             {mode === 'date' ? (
               <div>
-                <SolarTimeInput date={date} setDate={setDate} time={time} setTime={setTime} place={place} setPlace={setPlace} />
+                <SolarTimeInput date={date} setDate={setDate} time={time} setTime={setTime}
+                  place={place} setPlace={(p) => { if (p) setPlace(p); }} />
               </div>
             ) : (
               <div className="space-y-2.5">
+                {/* 截图识别导入（Kimi K3 视觉） */}
+                <ScreenshotImport
+                  kind="bazi"
+                  onApplyBazi={({ pillars, gender: g }) => {
+                    setMgz(pillars);
+                    if (g) setGender(g);
+                  }}
+                />
                 <div>
                   <label className="block text-xs font-semibold text-[#c8bd9c] mb-1.5">四柱干支（只知八字不知生日时用）</label>
                   <div className="space-y-1.5">
