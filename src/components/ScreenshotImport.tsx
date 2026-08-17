@@ -1,7 +1,8 @@
-// 截图识别导入：上传/粘贴截图 → Kimi K3 视觉识别 → 人工核对弹窗 → 填入盘面
-// 六爻：识别六爻四值（可含摇卦时间）；八字：识别四柱干支（可含性别）
+// 截图识别导入：上传/粘贴截图 → 识别 → 人工核对弹窗 → 填入盘面
+// 双引擎：在线·Kimi K3 视觉（默认，能读图形爻画/模糊图）｜ 离线·本机 OCR（Tesseract WASM，断网/无 Key 兜底，仅文字版式）
 import { useRef, useState } from 'react';
 import { preprocessImage, recognizeLiuyao, recognizeBazi } from '../lib/vision';
+import { ocrImage, parseLiuyaoText, parseBaziText } from '../lib/ocr';
 import type { LiuyaoOcr, BaziOcr } from '../lib/vision';
 import { YAO_META } from '../lib/liuyao/engine';
 import type { YaoValue } from '../lib/liuyao/engine';
@@ -14,6 +15,8 @@ const POS_SHORT = ['初', '二', '三', '四', '五', '上'];
 const VALUES: YaoValue[] = [7, 8, 9, 6];
 const PILLAR_LABELS = ['年柱', '月柱', '日柱', '时柱'] as const;
 
+type Engine = 'online' | 'offline';
+
 interface Props {
   kind: 'liuyao' | 'bazi';
   onApplyLiuyao?: (r: { yaos: YaoValue[]; date?: string; time?: string }) => void;
@@ -21,28 +24,41 @@ interface Props {
 }
 
 export function ScreenshotImport({ kind, onApplyLiuyao, onApplyBazi }: Props) {
+  const [engine, setEngine] = useState<Engine>('online');
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState('');
   const [error, setError] = useState('');
   const [imgUrl, setImgUrl] = useState(''); // 预处理后的图，供人工比对
   const [ly, setLy] = useState<LiuyaoOcr | null>(null);
   const [bz, setBz] = useState<BaziOcr | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const lastFile = useRef<File | Blob | null>(null);
 
-  const run = async (file: File | Blob) => {
+  const run = async (file: File | Blob, useEngine?: Engine) => {
+    const eg = useEngine ?? engine;
     if (busy) return;
+    lastFile.current = file;
     setBusy(true);
     setError('');
+    setProgress('');
     setLy(null);
     setBz(null);
     try {
       const dataUrl = await preprocessImage(file);
       setImgUrl(dataUrl);
-      if (kind === 'liuyao') setLy(await recognizeLiuyao(dataUrl));
-      else setBz(await recognizeBazi(dataUrl));
+      if (eg === 'online') {
+        if (kind === 'liuyao') setLy(await recognizeLiuyao(dataUrl));
+        else setBz(await recognizeBazi(dataUrl));
+      } else {
+        const text = await ocrImage(dataUrl, (pct, stage) => setProgress(`${stage} ${pct}%`));
+        if (kind === 'liuyao') setLy(parseLiuyaoText(text));
+        else setBz(parseBaziText(text));
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
+      setProgress('');
     }
   };
 
@@ -58,6 +74,10 @@ export function ScreenshotImport({ kind, onApplyLiuyao, onApplyBazi }: Props) {
   };
 
   const result = kind === 'liuyao' ? ly : bz;
+  const engineBtn = (v: Engine) =>
+    `text-[10px] px-2 py-1 rounded border transition-colors ${engine === v
+      ? 'border-[#c9a962] text-[#c9a962] bg-[#c9a962]/10'
+      : 'border-[#3a2f1e] text-[#6f6a58] hover:border-[#c9a962]/50'}`;
 
   return (
     <div
@@ -75,8 +95,12 @@ export function ScreenshotImport({ kind, onApplyLiuyao, onApplyBazi }: Props) {
         <button onClick={() => fileRef.current?.click()} disabled={busy}
           className="btn-ghost text-xs px-3 py-1.5 !border-[#c9a962]/40 !text-[#c9a962]">
           {busy ? <Loader2 size={12} className="animate-spin" /> : <ImageUp size={12} />}
-          {busy ? '识别中（Kimi K3 视觉理解）…' : '截图识别导入'}
+          {busy ? (progress || (engine === 'online' ? '识别中（Kimi K3 视觉）…' : '加载离线引擎…')) : '截图识别导入'}
         </button>
+        <div className="flex gap-1">
+          <button onClick={() => setEngine('online')} disabled={busy} className={engineBtn('online')}>在线 · Kimi 视觉</button>
+          <button onClick={() => setEngine('offline')} disabled={busy} className={engineBtn('offline')} title="断网/未配 Key 时用；仅识别文字版式，读不了图形爻画">离线 · 本机 OCR</button>
+        </div>
         <span className="text-[10px] text-[#6f6a58] leading-snug">
           上传或在此框内 Ctrl+V 粘贴{kind === 'liuyao' ? '卦象' : '命盘'}截图，识别后核对确认才填入 · 图片已做放大增清处理
         </span>
@@ -88,6 +112,18 @@ export function ScreenshotImport({ kind, onApplyLiuyao, onApplyBazi }: Props) {
           {/API Key|401|未提供/.test(error) && (
             <button onClick={openTutorSettings} className="block mt-1 text-[#d4b578] underline underline-offset-2">
               去右上角「设置」填入 Kimi Key →
+            </button>
+          )}
+          {engine === 'online' && lastFile.current && (
+            <button onClick={() => run(lastFile.current!, 'offline')}
+              className="block mt-1 text-[#d4b578] underline underline-offset-2">
+              在线识别失败 —— 改用「离线 · 本机 OCR」重试这张图 →
+            </button>
+          )}
+          {engine === 'offline' && (
+            <button onClick={() => { setEngine('online'); if (lastFile.current) run(lastFile.current, 'online'); }}
+              className="block mt-1 text-[#d4b578] underline underline-offset-2">
+              离线读不出 —— 改用「在线 · Kimi 视觉」重试这张图 →
             </button>
           )}
         </div>
@@ -170,7 +206,7 @@ export function ScreenshotImport({ kind, onApplyLiuyao, onApplyBazi }: Props) {
                   )}
                 </>
               )}
-              {result.note && <p className="text-[10px] text-[#6f6a58] leading-snug">模型备注：{result.note}</p>}
+              {result.note && <p className="text-[10px] text-[#6f6a58] leading-snug">识别备注：{result.note}</p>}
             </div>
           </div>
           <div className="flex gap-2 pt-1">
