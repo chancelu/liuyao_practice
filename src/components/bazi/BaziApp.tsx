@@ -12,6 +12,8 @@ import type { Element5 } from '../../lib/liuyao/constants';
 import { buildBaziContext, buildBaziSystemPrompt, buildBaziReadingPrompt, BAZI_BOOKS } from '../../lib/bazi/tutorContext';
 import { StepAsk, TutorPanel, AiVerdict } from '../liuyao/TutorChat';
 import { SolarTimeInput, type PlaceSel } from '../geo/SolarTimeInput';
+import { Notebook } from '../Notebook';
+import type { NoteRecord, BaziPayload } from '../../lib/notebook';
 import { DEFAULT_PLACE, cityAt } from '../../lib/geo/cities';
 import { solarCorrection, dateTimeOf } from '../../lib/geo/solarTime';
 import { ChevronDown, ChevronRight, GraduationCap, X, BookOpen } from 'lucide-react';
@@ -188,6 +190,28 @@ export function BaziApp() {
   };
   const gejuInfo = gejuDetail(chart.geju.name);
   const careers = careerOf(chart.geju.name, chart.waige);
+
+  // 复盘本：存当前命盘 / 载回历史命盘
+  const makeNoteDraft = () => ({
+    type: 'bazi' as const,
+    title: mode === 'manual' ? mgz.join(' ') : `${date} ${time} · ${gender === 'male' ? '乾造' : '坤造'}`,
+    summary: `日主${chart.dayMaster}${chart.dayMasterElement}（${chart.strength.label}）· ${chart.geju.name}${chart.waige.length ? ` · 外格候选 ${chart.waige[0].name}（${chart.waige[0].zhen}）` : ''} · 用神 ${yong.yongshen.join('、')}`,
+    payload: { mode, date, time, place, gender, focus, mgz, qiyunInput, birthYearInput } as BaziPayload,
+  });
+
+  const loadNote = (n: NoteRecord) => {
+    if (n.type !== 'bazi') return;
+    const p = n.payload as BaziPayload;
+    setMode(p.mode);
+    setDate(p.date);
+    setTime(p.time);
+    setPlace(p.place);
+    setGender(p.gender);
+    setFocus(p.focus);
+    setMgz(p.mgz);
+    setQiyunInput(p.qiyunInput);
+    setBirthYearInput(p.birthYearInput);
+  };
   // 神煞归组：名称 → 落宫列表（供第 9 步详解）
   const shaGroups = new Map<string, string[]>();
   for (const p of chart.pillars) {
@@ -827,6 +851,12 @@ export function BaziApp() {
                 </div>
               ))}
             </div>
+          </section>
+
+          {/* 复盘本 */}
+          <section className="panel p-4">
+            <div className="section-head"><span className="num text-base">捌</span><span className="title">复盘本 · 应验追踪</span></div>
+            <Notebook type="bazi" makeCurrent={makeNoteDraft} onLoad={loadNote} />
           </section>
 
           <footer className="text-[10px] text-[#6f6a58] leading-relaxed border-t border-[#3a2f1e] pt-3 pb-6">

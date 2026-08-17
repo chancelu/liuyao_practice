@@ -14,6 +14,8 @@ import { buildGuaContext, buildSystemPrompt } from '../../lib/liuyao/tutorContex
 import { DEFAULT_PLACE, cityAt } from '../../lib/geo/cities';
 import { solarCorrection, dateTimeOf } from '../../lib/geo/solarTime';
 import type { PlaceSel } from '../geo/SolarTimeInput';
+import { Notebook } from '../Notebook';
+import type { NoteRecord, LiuyaoPayload } from '../../lib/notebook';
 import { GraduationCap, X } from 'lucide-react';
 
 function todayLocal(): string {
@@ -70,6 +72,29 @@ export function LiuyaoApp() {
     return m[v];
   });
 
+  // 复盘本：存当前卦 / 载回历史卦
+  const makeNoteDraft = () =>
+    result
+      ? {
+          type: 'liuyao' as const,
+          title: question.trim() || `${result.p.benGua.info.name}${result.p.bianGua ? ` 之 ${result.p.bianGua.info.name}` : ''}`,
+          summary: `${result.p.ganzhi.month}月${result.p.ganzhi.day}日 · ${result.p.benGua.info.name}${result.p.bianGua ? ` 之 ${result.p.bianGua.info.name}` : '（六爻安静）'} · 用神${result.it.category.yongshen}爻 · 断为「${result.it.verdict}」`,
+          payload: { yaos, date, time, place, question, category } as LiuyaoPayload,
+        }
+      : null;
+
+  const loadNote = (n: NoteRecord) => {
+    if (n.type !== 'liuyao') return;
+    const p = n.payload as LiuyaoPayload;
+    setYaosRaw(p.yaos);
+    setActiveExample('');
+    setDate(p.date);
+    setTime(p.time);
+    setPlace(p.place);
+    setQuestion(p.question);
+    setCategory(p.category);
+  };
+
   return (
     <main className="max-w-7xl mx-auto px-4 py-5 grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-5 lg:flex-1 lg:min-h-0 lg:overflow-hidden w-full">
       {/* 左：输入（独立滚动） */}
@@ -119,6 +144,11 @@ export function LiuyaoApp() {
             <section>
               <div className="section-head"><span className="num text-base">肆</span><span className="title">必背歌诀速查（卷一 / 卷三 / 卷四）</span></div>
               <GeyueReference />
+            </section>
+
+            <section className="panel p-4">
+              <div className="section-head"><span className="num text-base">伍</span><span className="title">复盘本 · 应验追踪</span></div>
+              <Notebook type="liuyao" makeCurrent={makeNoteDraft} onLoad={loadNote} />
             </section>
 
             <footer className="text-[10px] text-[#6f6a58] leading-relaxed border-t border-[#3a2f1e] pt-3 pb-6">

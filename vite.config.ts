@@ -80,6 +80,10 @@ export default defineConfig(({ mode }) => {
   return {
     base: './',
     plugins: [inspectAttr(), react(), kimiTutorProxy(env.KIMI_API_KEY ?? "")],
+    // 兼容较老浏览器（Vite 7 默认仅支持 baseline-widely-available，旧内核会整页蓝屏）
+    build: {
+      target: ['es2018', 'chrome87', 'edge88', 'firefox78', 'safari14'],
+    },
     server: {
       port: 3000,
     },

@@ -5,10 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0b0e1a" />
     <title>玄学教学研习工作流 · 六爻 八字</title>
-    <style>html{background:#0b0e1a}</style>
+    <style>
+      html{background:#0b0e1a}
+      #boot-fallback{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:#0b0e1a;color:#e8e1cd;font-family:"PingFang SC","Songti SC",serif;padding:24px}
+      #boot-fallback .card{max-width:560px;width:100%;border:1px solid rgba(201,169,98,.35);border-radius:12px;padding:28px 32px;background:#14110b}
+      #boot-fallback h1{font-size:18px;color:#ecdfc0;letter-spacing:.2em;margin:0 0 12px}
+      #boot-fallback p{font-size:13px;line-height:1.9;color:#b0a78c;margin:0 0 10px}
+      #boot-fallback pre{font-size:11px;color:#8a7d5f;white-space:pre-wrap;word-break:break-all;background:#0b0e1a;border:1px solid rgba(201,169,98,.15);border-radius:8px;padding:10px 12px;max-height:180px;overflow:auto}
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <div id="boot-fallback">
+      <div class="card">
+        <h1>页面未能正常加载</h1>
+        <p>这通常是因为浏览器版本过低，不支持本站所需的 JavaScript 特性。请升级浏览器，或换用较新的 Chrome / Edge / Safari 后重试。</p>
+        <p>若升级后仍无法打开，请把下面两栏信息发给开发者：</p>
+        <pre id="boot-ua"></pre>
+        <pre id="boot-errors">（未捕获到具体错误）</pre>
+      </div>
+    </div>
+    <script>
+      window.__ERRS__ = [];
+      window.__showBootError = function () {
+        if (window.__APP_MOUNTED__) return;
+        var el = document.getElementById('boot-fallback');
+        if (el) el.style.display = 'flex';
+        var errs = document.getElementById('boot-errors');
+        if (errs) errs.textContent = window.__ERRS__.join('\n') || '（未捕获到具体错误，疑似浏览器不支持现代 JS 语法）';
+        var ua = document.getElementById('boot-ua');
+        if (ua) ua.textContent = navigator.userAgent;
+      };
+      window.addEventListener('error', function (e) {
+        window.__ERRS__.push((e.message || '脚本加载/执行错误') + (e.filename ? ' @ ' + e.filename.split('/').pop() : ''));
+        window.__showBootError();
+      }, true);
+      window.addEventListener('unhandledrejection', function (e) {
+        var r = e.reason;
+        window.__ERRS__.push('Promise: ' + ((r && r.message) || r));
+      });
+      setTimeout(function () { if (!window.__APP_MOUNTED__) window.__showBootError(); }, 4000);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

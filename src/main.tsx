@@ -11,3 +11,7 @@ createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </StrictMode>,
 )
+
+// 标记挂载成功，供 index.html 的启动兜底（蓝屏诊断）判定
+;(window as unknown as { __APP_MOUNTED__?: boolean }).__APP_MOUNTED__ = true
+document.getElementById('boot-fallback')?.remove()
