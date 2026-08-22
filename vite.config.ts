@@ -5,19 +5,23 @@ import { inspectAttr } from 'kimi-plugin-inspect-react'
 import { Readable } from "node:stream"
 import type { Plugin } from "vite"
 
-// Kimi 助教代理（本地开发）：key 优先取请求头 x-kimi-key（界面填入），
-// 其次取环境变量 KIMI_API_KEY；服务器不保存、不落盘，仅转发给 Kimi API
+const DEFAULT_ENDPOINT = "https://api.kimi.com/coding/v1/chat/completions"
+const DEFAULT_MODEL = "k3-256k"
+
+// AI 助教代理（本地开发，与 api/tutor.ts 生产版逻辑保持一致）：
+// key 优先取请求头 x-api-key（界面填入，仅存其浏览器），其次取环境变量 KIMI_API_KEY；
+// 环境变量 Key 只发给默认 Kimi 端点，自定义端点必须用户自带 Key。服务器不保存、不落盘，仅转发
 function kimiTutorProxy(envKey: string): Plugin {
   return {
     name: "kimi-tutor-proxy",
     configureServer(server) {
       server.middlewares.use("/api/tutor", (req, res) => {
-        // GET：探测服务端是否已配置 KIMI_API_KEY（前端据此隐藏填 Key 框）
+        // GET：探测服务端是否已配置 KIMI_API_KEY（前端据此显示「站点默认模型已就绪」）
         if (req.method === "GET") {
           res.statusCode = 200
           res.setHeader("Content-Type", "application/json; charset=utf-8")
           res.setHeader("Cache-Control", "no-store")
-          res.end(JSON.stringify({ serverKey: !!envKey }))
+          res.end(JSON.stringify({ serverKey: !!envKey, defaultModel: DEFAULT_MODEL }))
           return
         }
         if (req.method !== "POST") {
@@ -29,31 +33,48 @@ function kimiTutorProxy(envKey: string): Plugin {
         req.on("data", (c) => chunks.push(c))
         req.on("end", async () => {
           try {
-            const headerKey = req.headers["x-kimi-key"]
-            const apiKey = (Array.isArray(headerKey) ? headerKey[0] : headerKey) || envKey
+            const body = JSON.parse(Buffer.concat(chunks).toString("utf-8"))
+            // 端点校验：必须是 https 的合法 URL，缺省走 Kimi；只填域名时自动补 /v1/chat/completions
+            let endpoint = DEFAULT_ENDPOINT
+            if (typeof body.endpoint === "string" && body.endpoint.trim()) {
+              try {
+                const u = new URL(body.endpoint.trim())
+                if (u.protocol !== "https:") throw new Error("not https")
+                if (u.pathname === "/" || u.pathname === "") u.pathname = "/v1/chat/completions"
+                endpoint = u.toString()
+              } catch {
+                res.statusCode = 400
+                res.end("Bad Request: endpoint 必须是合法的 https URL")
+                return
+              }
+            }
+            const headerRaw = req.headers["x-api-key"] ?? req.headers["x-kimi-key"]
+            const headerKey = (Array.isArray(headerRaw) ? headerRaw[0] : headerRaw) || ""
+            const isDefaultEndpoint = endpoint === DEFAULT_ENDPOINT
+            const apiKey = headerKey || (isDefaultEndpoint ? envKey : "")
             if (!apiKey) {
               res.statusCode = 401
-              res.end("未提供 API Key：请先在助教面板上方填入你的 Kimi API Key，或配置环境变量 KIMI_API_KEY")
+              res.end(isDefaultEndpoint
+                ? "未提供 API Key：请在右上角「设置」中配置助教模型，或配置环境变量 KIMI_API_KEY"
+                : "自定义端点必须在「设置」中填入你自己的 API Key（站点环境变量 Key 不会转发给第三方端点）")
               return
             }
-            const body = JSON.parse(Buffer.concat(chunks).toString("utf-8"))
-            const upstream = await fetch("https://api.kimi.com/coding/v1/chat/completions", {
+            const upstream = await fetch(endpoint, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${apiKey}`,
               },
               body: JSON.stringify({
-                model: body.model ?? "k3-256k",
+                model: body.model ?? DEFAULT_MODEL,
                 messages: body.messages,
-                // k3-256k 仅允许 temperature=1，不传则默认即 1
                 stream: true,
               }),
             })
             if (!upstream.ok || !upstream.body) {
               res.statusCode = upstream.status
               res.setHeader("Content-Type", "application/json; charset=utf-8")
-              res.end(JSON.stringify({ error: `Kimi API ${upstream.status}: ${await upstream.text()}` }))
+              res.end(JSON.stringify({ error: `上游 API ${upstream.status}: ${await upstream.text()}` }))
               return
             }
             res.statusCode = 200

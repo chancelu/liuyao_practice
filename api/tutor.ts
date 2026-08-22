@@ -25,12 +25,13 @@ export default async function handler(req: Request): Promise<Response> {
     return new Response('Bad Request: invalid JSON', { status: 400 });
   }
 
-  // 端点校验：必须是 https 的合法 URL，缺省走 Kimi
+  // 端点校验：必须是 https 的合法 URL，缺省走 Kimi；只填域名时自动补 /v1/chat/completions
   let endpoint = DEFAULT_ENDPOINT;
   if (typeof body.endpoint === 'string' && body.endpoint.trim()) {
     try {
       const u = new URL(body.endpoint.trim());
       if (u.protocol !== 'https:') throw new Error('not https');
+      if (u.pathname === '/' || u.pathname === '') u.pathname = '/v1/chat/completions';
       endpoint = u.toString();
     } catch {
       return new Response('Bad Request: endpoint 必须是合法的 https URL', { status: 400 });

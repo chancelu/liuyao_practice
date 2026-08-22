@@ -2,7 +2,7 @@
 // 支持任意 OpenAI 兼容端点（端点 URL + API Key + Model ID）；配置只存本机 localStorage
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Settings, X, KeyRound, Trash2, CheckCircle2, ShieldCheck, Globe, Cpu } from 'lucide-react';
+import { Settings, X, KeyRound, Trash2, CheckCircle2, ShieldCheck, Globe, Cpu, Loader2 } from 'lucide-react';
 import {
   getTutorConfig, setTutorConfig, probeServerKey,
   DEFAULT_ENDPOINT, DEFAULT_MODEL,
@@ -29,6 +29,8 @@ export function TutorSettings() {
   const [endpoint, setEndpoint] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [model, setModel] = useState('');
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null);
 
   useEffect(() => {
     const onOpen = () => setOpen(true);
@@ -58,14 +60,20 @@ export function TutorSettings() {
   };
 
   const save = () => {
-    const ep = endpoint.trim();
+    let ep = endpoint.trim();
     const key = apiKey.trim();
     const m = model.trim();
     if (!ep || !key || !m) return;
     if (!/^https:\/\/.+/.test(ep)) return;
+    // 只填域名/根路径时自动补全 OpenAI 兼容聊天路径
+    try {
+      const u = new URL(ep);
+      if (u.pathname === '/' || u.pathname === '') { u.pathname = '/v1/chat/completions'; ep = u.toString(); }
+    } catch { return; }
     setTutorConfig({ endpoint: ep, apiKey: key, model: m });
     setSaved(getTutorConfig());
     setEditing(false);
+    setTestResult(null);
     setEndpoint(''); setApiKey(''); setModel('');
     window.dispatchEvent(new CustomEvent('tutor-key-changed'));
   };
@@ -73,8 +81,42 @@ export function TutorSettings() {
     setTutorConfig(null);
     setSaved(null);
     setEditing(false);
+    setTestResult(null);
     setEndpoint(''); setApiKey(''); setModel('');
     window.dispatchEvent(new CustomEvent('tutor-key-changed'));
+  };
+
+  /** 用已保存的配置发一条真实请求，验证端点/Key/模型三者可用 */
+  const testConnection = async () => {
+    if (!saved || testing) return;
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json', 'x-api-key': saved.apiKey };
+      const body: Record<string, unknown> = {
+        model: saved.model,
+        messages: [{ role: 'user', content: '只回复一个字：好' }],
+      };
+      if (saved.endpoint !== DEFAULT_ENDPOINT) body.endpoint = saved.endpoint;
+      const res = await fetch('/api/tutor', { method: 'POST', headers, body: JSON.stringify(body) });
+      if (!res.ok || !res.body) {
+        const t = await res.text().catch(() => '');
+        throw new Error(t || `请求失败（${res.status}）`);
+      }
+      const reader = res.body.getReader();
+      const { value } = await reader.read();
+      await reader.cancel();
+      const chunk = value ? new TextDecoder().decode(value) : '';
+      if (/content|data:/.test(chunk)) {
+        setTestResult({ ok: true, msg: `连接成功，${saved.model} 正常返回` });
+      } else {
+        setTestResult({ ok: true, msg: '端点已连通（返回为空流，建议发一条助教消息再确认）' });
+      }
+    } catch (e) {
+      setTestResult({ ok: false, msg: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setTesting(false);
+    }
   };
 
   const inputCls = 'w-full text-xs px-3 py-2 bg-[#0f0d09] border border-[#3a2f1e] rounded-lg focus:outline-none focus:border-[#c9a962] text-[#e8e1cd] placeholder:text-[#6b6353] transition-colors';
@@ -140,12 +182,28 @@ export function TutorSettings() {
                       <ShieldCheck size={13} /> 本机已配置自定义模型{serverKey ? '（优先于站点默认）' : ''}
                     </span>
                     <span className="flex items-center gap-3">
+                      <button
+                        onClick={testConnection}
+                        disabled={testing}
+                        className="flex items-center gap-1 text-[11px] text-[#9ab8d4] hover:underline underline-offset-2 disabled:opacity-40"
+                      >
+                        {testing && <Loader2 size={11} className="animate-spin" />} 测试连接
+                      </button>
                       <button onClick={() => startEdit()} className="text-[11px] text-[#c9a962] hover:underline underline-offset-2">更换</button>
                       <button onClick={clear} className="flex items-center gap-0.5 text-[11px] text-red-400 hover:underline underline-offset-2">
                         <Trash2 size={11} /> 清除
                       </button>
                     </span>
                   </div>
+                  {testResult && (
+                    <p className={`text-[11px] leading-relaxed rounded px-2 py-1.5 border break-all ${
+                      testResult.ok
+                        ? 'text-emerald-300 bg-emerald-400/10 border-emerald-400/25'
+                        : 'text-red-300 bg-red-400/10 border-red-400/25'
+                    }`}>
+                      {testResult.msg}
+                    </p>
+                  )}
                   <div className="text-[11px] text-[#a89f8a] space-y-0.5">
                     <p className="flex items-center gap-1.5"><Globe size={11} className="shrink-0" /><span className="break-all">{saved.endpoint}</span></p>
                     <p className="flex items-center gap-1.5"><Cpu size={11} className="shrink-0" />{saved.model}</p>
@@ -173,7 +231,7 @@ export function TutorSettings() {
                     ))}
                   </div>
                   <input value={endpoint} onChange={(e) => setEndpoint(e.target.value)}
-                    placeholder="端点 URL（https://…/chat/completions）" className={inputCls} />
+                    placeholder="端点 URL（完整 …/chat/completions 或域名均可）" className={inputCls} />
                   <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)}
                     placeholder="API Key（sk-...）" className={inputCls} />
                   <div className="flex items-center gap-2">
