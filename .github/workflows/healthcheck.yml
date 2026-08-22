@@ -1,0 +1,23 @@
+name: healthcheck
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: GET probe (serverKey 是否已配置)
+        run: |
+          echo "== GET /api/tutor =="
+          curl -sS -m 30 -w "\nHTTP %{http_code}\n" https://liuyao-practice.vercel.app/api/tutor
+      - name: POST inference (真实推理链路)
+        run: |
+          echo "== POST /api/tutor =="
+          curl -sS -m 90 -N -w "\nHTTP %{http_code}\n" \
+            -H "Content-Type: application/json" \
+            -d '{"model":"k3-256k","messages":[{"role":"user","content":"用不超过十个字介绍你自己"}]}' \
+            https://liuyao-practice.vercel.app/api/tutor | head -c 1500
+      - name: 首页可达性
+        run: |
+          echo "== GET / =="
+          curl -sS -m 30 -o /dev/null -w "HTTP %{http_code}, %{size_download} bytes\n" https://liuyao-practice.vercel.app/
