@@ -160,7 +160,7 @@ export function LiuyaoApp() {
             {tutorOpen ? (
               <section className="fixed bottom-4 right-4 z-50 w-[380px] max-w-[92vw] shadow-2xl rounded-xl overflow-hidden border border-[#c9a962]/30">
                 <div className="flex items-center justify-between bg-gradient-to-b from-[#e3c98a] to-[#b08d48] text-[#1a1408] px-3.5 py-2.5">
-                  <span className="text-xs font-bold flex items-center gap-1.5 tracking-wider"><GraduationCap size={14} /> 六爻助教 · Kimi K3</span>
+                  <span className="text-xs font-bold flex items-center gap-1.5 tracking-wider"><GraduationCap size={14} /> 六爻助教 · AI</span>
                   <button onClick={() => setTutorOpen(false)}><X size={15} /></button>
                 </div>
                 <TutorPanel

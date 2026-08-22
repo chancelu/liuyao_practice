@@ -1,9 +1,9 @@
-// 截图识别（在线版）：Canvas 预处理（放大/灰度/对比度拉伸）+ Kimi K3 视觉理解 → 结构化结果
+// 截图识别（在线版）：Canvas 预处理（放大/灰度/对比度拉伸）+ AI 视觉理解 → 结构化结果
 // 识别结果不上屏直接生效——一律经确认弹窗人工核对后才填入盘面
 import { STEMS, BRANCHES } from './liuyao/constants';
 import type { YaoValue } from './liuyao/engine';
 import { gzValid } from './bazi/engine';
-import { getTutorKey } from '../components/liuyao/TutorChat';
+import { getTutorConfig, DEFAULT_ENDPOINT, DEFAULT_MODEL } from '../components/liuyao/TutorChat';
 
 // —— 图像预处理：放大到长边约 2000px + 灰度 + 2% 裁剪对比度拉伸 ——
 // 对低清截图的 OCR/视觉理解质量提升明显；输出 JPEG 控制在几百 KB，省 token
@@ -43,26 +43,30 @@ export async function preprocessImage(file: File | Blob): Promise<string> {
   return canvas.toDataURL('image/jpeg', 0.9);
 }
 
-// —— 调 Kimi K3 视觉（走 /api/tutor 代理，流式读回全文）——
+// —— 调 AI 视觉（走 /api/tutor 代理，流式读回全文）——
 async function askVision(prompt: string, dataUrl: string): Promise<string> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  const apiKey = getTutorKey();
-  if (apiKey) headers['x-kimi-key'] = apiKey;
+  const cfg = getTutorConfig();
+  const body: Record<string, unknown> = {
+    model: cfg?.model ?? DEFAULT_MODEL,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'image_url', image_url: { url: dataUrl } },
+          { type: 'text', text: prompt },
+        ],
+      },
+    ],
+  };
+  if (cfg) {
+    headers['x-api-key'] = cfg.apiKey;
+    if (cfg.endpoint && cfg.endpoint !== DEFAULT_ENDPOINT) body.endpoint = cfg.endpoint;
+  }
   const res = await fetch('/api/tutor', {
     method: 'POST',
     headers,
-    body: JSON.stringify({
-      model: 'k3-256k',
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'image_url', image_url: { url: dataUrl } },
-            { type: 'text', text: prompt },
-          ],
-        },
-      ],
-    }),
+    body: JSON.stringify(body),
   });
   if (!res.ok || !res.body) {
     const errText = await res.text().catch(() => '');

@@ -259,7 +259,7 @@ export function BaziApp() {
               </div>
             ) : (
               <div className="space-y-2.5">
-                {/* 截图识别导入（Kimi K3 视觉） */}
+                {/* 截图识别导入（AI 视觉） */}
                 <ScreenshotImport
                   kind="bazi"
                   onApplyBazi={({ pillars, gender: g }) => {
@@ -804,8 +804,8 @@ export function BaziApp() {
               <AiVerdict
                 systemPrompt={buildBaziReadingPrompt()}
                 guaContext={ctx}
-                title="AI 完整命理解读 · Kimi K3（旺衰 / 格局 / 过去验证 / 未来预测）"
-                intro="前面十三步是排盘与规则的逐项推演。点击下方按钮，Kimi K3 会以八部典籍为依据，把整个命盘串成小白能懂的完整解读：性格天赋、格局用神、过去关键年份回顾、未来几年预测、大运走势、建议趋避。"
+                title="AI 完整命理解读（旺衰 / 格局 / 过去验证 / 未来预测）"
+                intro="前面十三步是排盘与规则的逐项推演。点击下方按钮，AI 会以八部典籍为依据，把整个命盘串成小白能懂的完整解读：性格天赋、格局用神、过去关键年份回顾、未来几年预测、大运走势、建议趋避。"
                 buttonText="生成 AI 命理解读"
                 askText="请基于以上命盘数据，结合我想了解的方面，做完整命理解读（含过去关键大运流年的回顾验证与未来几年的预测）。"
               />
@@ -878,7 +878,7 @@ export function BaziApp() {
           {tutorOpen ? (
             <section className="fixed bottom-4 right-4 z-50 w-[380px] max-w-[92vw] shadow-2xl rounded-xl overflow-hidden border border-[#c9a962]/30">
               <div className="flex items-center justify-between bg-gradient-to-b from-[#e3c98a] to-[#b08d48] text-[#1a1408] px-3.5 py-2.5">
-                <span className="text-xs font-bold flex items-center gap-1.5 tracking-wider"><GraduationCap size={14} /> 八字助教 · Kimi K3</span>
+                <span className="text-xs font-bold flex items-center gap-1.5 tracking-wider"><GraduationCap size={14} /> 八字助教 · AI</span>
                 <button onClick={() => setTutorOpen(false)}><X size={15} /></button>
               </div>
               <TutorPanel

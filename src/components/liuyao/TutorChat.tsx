@@ -1,20 +1,53 @@
-// Kimi 助教客户端：流式问答（通过 /api/tutor 代理）
-// API Key 统一在右上角「设置」中填写，仅存浏览器 localStorage，随请求头发给代理，不落任何文件
+// AI 助教客户端：流式问答（通过 /api/tutor 代理，支持任意 OpenAI 兼容端点）
+// 模型配置统一在右上角「设置」中填写，仅存浏览器 localStorage，随请求头发给代理，不落任何文件
 import { useEffect, useRef, useState } from 'react';
 import { Send, Loader2, MessageCircleQuestion, X, Sparkles, RefreshCw, Settings } from 'lucide-react';
 
 export interface ChatMsg { role: 'user' | 'assistant' | 'system'; content: string }
 
-const KEY_STORAGE = 'kimi_tutor_api_key';
+// —— 助教模型配置（端点 / Key / Model ID）——
+export const DEFAULT_ENDPOINT = 'https://api.kimi.com/coding/v1/chat/completions';
+export const DEFAULT_MODEL = 'k3-256k';
+const CFG_STORAGE = 'tutor_model_config';
+const OLD_KEY_STORAGE = 'kimi_tutor_api_key'; // 旧版单 Key 存储键，读取时自动迁移
 
-export function getTutorKey(): string {
-  try { return localStorage.getItem(KEY_STORAGE) ?? ''; } catch { return ''; }
-}
-export function setTutorKey(k: string) {
+export interface TutorConfig { endpoint: string; apiKey: string; model: string }
+
+export function getTutorConfig(): TutorConfig | null {
   try {
-    if (k) localStorage.setItem(KEY_STORAGE, k);
-    else localStorage.removeItem(KEY_STORAGE);
+    const raw = localStorage.getItem(CFG_STORAGE);
+    if (raw) {
+      const c = JSON.parse(raw) as TutorConfig;
+      if (c && c.endpoint && c.apiKey && c.model) return c;
+    }
+    // 迁移旧版：只有 Kimi Key 的情况
+    const old = localStorage.getItem(OLD_KEY_STORAGE);
+    if (old) {
+      const cfg: TutorConfig = { endpoint: DEFAULT_ENDPOINT, apiKey: old, model: DEFAULT_MODEL };
+      localStorage.setItem(CFG_STORAGE, JSON.stringify(cfg));
+      localStorage.removeItem(OLD_KEY_STORAGE);
+      return cfg;
+    }
   } catch { /* ignore */ }
+  return null;
+}
+export function setTutorConfig(c: TutorConfig | null) {
+  try {
+    if (c) localStorage.setItem(CFG_STORAGE, JSON.stringify(c));
+    else localStorage.removeItem(CFG_STORAGE);
+  } catch { /* ignore */ }
+}
+
+/** 组装一次助教请求的 headers + body 增量（自定义端点时带上 endpoint） */
+function tutorRequest(messages: ChatMsg[]): { headers: Record<string, string>; body: Record<string, unknown> } {
+  const cfg = getTutorConfig();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const body: Record<string, unknown> = { model: cfg?.model ?? DEFAULT_MODEL, messages };
+  if (cfg) {
+    headers['x-api-key'] = cfg.apiKey;
+    if (cfg.endpoint && cfg.endpoint !== DEFAULT_ENDPOINT) body.endpoint = cfg.endpoint;
+  }
+  return { headers, body };
 }
 
 /** 打开全局「助教设置」对话框（由 SettingsKey.tsx 监听） */
@@ -36,13 +69,13 @@ export function probeServerKey(): Promise<boolean> {
   return serverKeyPromise;
 }
 
-/** 助教是否可用（服务端已配 Key 或本机已填 Key） */
+/** 助教是否可用（服务端已配 Key 或本机已配置模型） */
 export function useTutorReady(): boolean | null {
-  const [ready, setReady] = useState<boolean | null>(serverKeyCache !== null ? (serverKeyCache || !!getTutorKey()) : null);
+  const [ready, setReady] = useState<boolean | null>(serverKeyCache !== null ? (serverKeyCache || !!getTutorConfig()) : null);
   useEffect(() => {
     let alive = true;
-    probeServerKey().then((sv) => { if (alive) setReady(sv || !!getTutorKey()); });
-    const onKeyChanged = () => probeServerKey().then((sv) => setReady(sv || !!getTutorKey()));
+    probeServerKey().then((sv) => { if (alive) setReady(sv || !!getTutorConfig()); });
+    const onKeyChanged = () => probeServerKey().then((sv) => setReady(sv || !!getTutorConfig()));
     window.addEventListener('tutor-key-changed', onKeyChanged);
     return () => { alive = false; window.removeEventListener('tutor-key-changed', onKeyChanged); };
   }, []);
@@ -98,17 +131,15 @@ export async function askTutor(
   history: ChatMsg[],
   onDelta: (text: string) => void,
 ): Promise<string> {
-  const apiKey = getTutorKey();
   const messages: ChatMsg[] = [
     { role: 'system', content: systemPrompt + '\n\n以下是当前卦局数据：\n' + guaContext },
     ...history,
   ];
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (apiKey) headers['x-kimi-key'] = apiKey; // 不填则由服务器环境变量 KIMI_API_KEY 兜底
+  const { headers, body } = tutorRequest(messages);
   const res = await fetch('/api/tutor', {
     method: 'POST',
     headers,
-    body: JSON.stringify({ model: 'k3-256k', messages }),
+    body: JSON.stringify(body),
   });
   if (!res.ok || !res.body) {
     const errText = await res.text().catch(() => '');
@@ -139,12 +170,11 @@ export async function askTutor(
   return full;
 }
 
-/** 用 Kimi K3 把具体问题归类为测事类别（定用神）。返回 { categoryId, reason } */
+/** 用 AI 助教把具体问题归类为测事类别（定用神）。返回 { categoryId, reason } */
 export async function classifyQuestion(
   question: string,
   categories: { id: string; label: string; yongshen: string }[],
 ): Promise<{ categoryId: string; reason: string }> {
-  const apiKey = getTutorKey();
   const list = categories.map((c) => `${c.id}｜${c.label}｜用神取${c.yongshen}爻`).join('\n');
   const prompt = [
     '你是六爻「定用神」助教，教材为六爻课程卷四（用神卷）。',
@@ -160,12 +190,11 @@ export async function classifyQuestion(
     '{"category":"<类别id>","reason":"<取用理由>"}',
   ].join('\n');
 
-  const classifyHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (apiKey) classifyHeaders['x-kimi-key'] = apiKey;
+  const classifyReq = tutorRequest([{ role: 'user', content: prompt }]);
   const res = await fetch('/api/tutor', {
     method: 'POST',
-    headers: classifyHeaders,
-    body: JSON.stringify({ model: 'k3-256k', messages: [{ role: 'user', content: prompt }] }),
+    headers: classifyReq.headers,
+    body: JSON.stringify(classifyReq.body),
   });
   if (!res.ok || !res.body) {
     const errText = await res.text().catch(() => '');
@@ -207,7 +236,7 @@ function KeyGuide() {
       onClick={openTutorSettings}
       className="w-full flex items-center justify-center gap-1.5 border-b border-[#3a2f1e] bg-[#1d1912] px-3 py-2 text-[11px] text-[#d4b578] hover:bg-[#2c2417] transition-colors"
     >
-      <Settings size={12} /> 尚未配置 Kimi Key —— 点这里或右上角「设置」填入后即可提问
+      <Settings size={12} /> 尚未配置助教模型 —— 点这里或右上角「设置」完成配置后即可提问
     </button>
   );
 }
@@ -278,7 +307,7 @@ export function TutorPanel({
       <div ref={scrollRef} className={`${height} overflow-y-auto px-3 py-2 space-y-2`}>
         {history.length === 0 && (
           <p className="text-[11px] text-[#8d8670] leading-relaxed">
-            我是六爻助教（Kimi K3 驱动），通读卷一~卷四教材，也知道你当前这盘卦的全部细节。有什么不懂直接问，例如：「为什么这爻是真空不是假空」「世爻为什么是三爻」「这卦求财怎么看」。
+            我是六爻助教（AI 驱动），通读卷一~卷四教材，也知道你当前这盘卦的全部细节。有什么不懂直接问，例如：「为什么这爻是真空不是假空」「世爻为什么是三爻」「这卦求财怎么看」。
           </p>
         )}
         {history.map((m, i) => (
@@ -295,7 +324,7 @@ export function TutorPanel({
             {error}
             {/API Key|401|未提供/.test(error) && (
               <button onClick={openTutorSettings} className="block mt-1 text-[#d4b578] underline underline-offset-2">
-                去右上角「设置」填入 Kimi Key →
+                去右上角「设置」配置助教模型 →
               </button>
             )}
           </div>
@@ -392,7 +421,7 @@ export function AiVerdict({ systemPrompt, guaContext, title, intro, buttonText, 
     <div className="mb-3 rounded-xl border border-[#9a86c8]/35 bg-gradient-to-br from-[#1c1626] to-[#17140f] overflow-hidden">
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#9a86c8]/25 bg-[#9a86c8]/10">
         <span className="text-xs font-bold flex items-center gap-1.5 text-[#cbbbea] tracking-wider">
-          <Sparkles size={13} /> {title ?? 'AI 完整断卦 · Kimi K3（结论 / 应期 / 决策 / 化解）'}
+          <Sparkles size={13} /> {title ?? 'AI 完整断卦（结论 / 应期 / 决策 / 化解）'}
         </span>
         {text && !busy && (
           <button onClick={run} className="flex items-center gap-1 text-[11px] text-[#cbbbea] hover:text-white rounded-full border border-[#9a86c8]/40 px-2.5 py-0.5 transition-colors">
@@ -405,7 +434,7 @@ export function AiVerdict({ systemPrompt, guaContext, title, intro, buttonText, 
         {!text && !busy && !error && (
           <div className="text-center py-2">
             <p className="text-[11px] text-[#a79cc8] mb-2.5 leading-relaxed">
-              {intro ?? '上面是规则引擎按教材条文的逐项判定。点击下方按钮，Kimi K3 会把整盘卦串起来，用大白话讲：所问之事结果如何、什么时候应验、该怎么决策、如何趋避化解。'}
+              {intro ?? '上面是规则引擎按教材条文的逐项判定。点击下方按钮，AI 会把整盘卦串起来，用大白话讲：所问之事结果如何、什么时候应验、该怎么决策、如何趋避化解。'}
             </p>
             <button onClick={run}
               className="inline-flex items-center gap-1.5 text-sm font-bold px-5 py-2 rounded-full bg-gradient-to-b from-[#b6a0e0] to-[#8a76bd] text-[#17101f] hover:brightness-110 shadow-[0_2px_16px_rgba(154,134,200,0.35)] transition">
@@ -425,7 +454,7 @@ export function AiVerdict({ systemPrompt, guaContext, title, intro, buttonText, 
             {error}
             {/API Key|401|未提供/.test(error) && (
               <button onClick={openTutorSettings} className="block mt-1 text-[#d4b578] underline underline-offset-2">
-                去右上角「设置」填入 Kimi Key →
+                去右上角「设置」配置助教模型 →
               </button>
             )}
           </div>

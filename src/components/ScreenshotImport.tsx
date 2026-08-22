@@ -1,5 +1,5 @@
 // 截图识别导入：上传/粘贴截图 → 识别 → 人工核对弹窗 → 填入盘面
-// 双引擎：在线·Kimi K3 视觉（默认，能读图形爻画/模糊图）｜ 离线·本机 OCR（Tesseract WASM，断网/无 Key 兜底，仅文字版式）
+// 双引擎：在线·AI 视觉（默认，能读图形爻画/模糊图）｜ 离线·本机 OCR（Tesseract WASM，断网/未配模型兜底，仅文字版式）
 import { useRef, useState } from 'react';
 import { preprocessImage, recognizeLiuyao, recognizeBazi } from '../lib/vision';
 import { ocrImage, parseLiuyaoText, parseBaziText } from '../lib/ocr';
@@ -95,10 +95,10 @@ export function ScreenshotImport({ kind, onApplyLiuyao, onApplyBazi }: Props) {
         <button onClick={() => fileRef.current?.click()} disabled={busy}
           className="btn-ghost text-xs px-3 py-1.5 !border-[#c9a962]/40 !text-[#c9a962]">
           {busy ? <Loader2 size={12} className="animate-spin" /> : <ImageUp size={12} />}
-          {busy ? (progress || (engine === 'online' ? '识别中（Kimi K3 视觉）…' : '加载离线引擎…')) : '截图识别导入'}
+          {busy ? (progress || (engine === 'online' ? '识别中（AI 视觉）…' : '加载离线引擎…')) : '截图识别导入'}
         </button>
         <div className="flex gap-1">
-          <button onClick={() => setEngine('online')} disabled={busy} className={engineBtn('online')}>在线 · Kimi 视觉</button>
+          <button onClick={() => setEngine('online')} disabled={busy} className={engineBtn('online')}>在线 · AI 视觉</button>
           <button onClick={() => setEngine('offline')} disabled={busy} className={engineBtn('offline')} title="断网/未配 Key 时用；仅识别文字版式，读不了图形爻画">离线 · 本机 OCR</button>
         </div>
         <span className="text-[10px] text-[#6f6a58] leading-snug">
@@ -111,7 +111,7 @@ export function ScreenshotImport({ kind, onApplyLiuyao, onApplyBazi }: Props) {
           {error}
           {/API Key|401|未提供/.test(error) && (
             <button onClick={openTutorSettings} className="block mt-1 text-[#d4b578] underline underline-offset-2">
-              去右上角「设置」填入 Kimi Key →
+              去右上角「设置」配置助教模型 →
             </button>
           )}
           {engine === 'online' && lastFile.current && (
@@ -123,7 +123,7 @@ export function ScreenshotImport({ kind, onApplyLiuyao, onApplyBazi }: Props) {
           {engine === 'offline' && (
             <button onClick={() => { setEngine('online'); if (lastFile.current) run(lastFile.current, 'online'); }}
               className="block mt-1 text-[#d4b578] underline underline-offset-2">
-              离线读不出 —— 改用「在线 · Kimi 视觉」重试这张图 →
+              离线读不出 —— 改用「在线 · AI 视觉」重试这张图 →
             </button>
           )}
         </div>

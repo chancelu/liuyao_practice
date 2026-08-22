@@ -98,7 +98,7 @@ export function InputPanel({
         </div>
       </div>
 
-      {/* 截图识别导入（Kimi K3 视觉） */}
+      {/* 截图识别导入（AI 视觉） */}
       <ScreenshotImport
         kind="liuyao"
         onApplyLiuyao={({ yaos: y, date: d, time: t }) => {
@@ -240,7 +240,7 @@ export function InputPanel({
           className="mt-1.5 btn-gold text-xs px-3.5 py-1.5"
         >
           {classifying ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-          AI 定用神（Kimi K3 归类）
+          AI 定用神（智能归类）
         </button>
         {classifyMsg && (
           <div className={`mt-1.5 text-[10px] leading-relaxed rounded px-2 py-1.5 border ${
