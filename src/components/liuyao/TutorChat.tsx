@@ -124,12 +124,14 @@ export function Md({ text }: { text: string }) {
   );
 }
 
-/** 调用助教（流式）。systemPrompt+guaContext 组成 system，history 为对话。 */
+/** 调用助教（流式）。systemPrompt+guaContext 组成 system，history 为对话。
+ *  onReasoning 可选：推理模型（如 k3）先输出的思考过程会经此回调实时上报，便于界面展示进度 */
 export async function askTutor(
   systemPrompt: string,
   guaContext: string,
   history: ChatMsg[],
   onDelta: (text: string) => void,
+  onReasoning?: (text: string) => void,
 ): Promise<string> {
   const messages: ChatMsg[] = [
     { role: 'system', content: systemPrompt + '\n\n以下是当前卦局数据：\n' + guaContext },
@@ -149,6 +151,7 @@ export async function askTutor(
   const decoder = new TextDecoder();
   let buf = '';
   let full = '';
+  let reasoning = '';
   for (;;) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -162,8 +165,11 @@ export async function askTutor(
       if (data === '[DONE]') continue;
       try {
         const json = JSON.parse(data);
-        const delta = json.choices?.[0]?.delta?.content ?? '';
-        if (delta) { full += delta; onDelta(full); }
+        const delta = json.choices?.[0]?.delta ?? {};
+        const rc: string = delta.reasoning_content ?? '';
+        if (rc && onReasoning) { reasoning += rc; onReasoning(reasoning); }
+        const c: string = delta.content ?? '';
+        if (c) { full += c; onDelta(full); }
       } catch { /* 忽略半行 */ }
     }
   }
@@ -382,6 +388,8 @@ export function AiVerdict({ systemPrompt, guaContext, title, intro, buttonText, 
   askText?: string;
 }) {
   const [text, setText] = useState('');
+  const [reasoning, setReasoning] = useState('');
+  const [elapsed, setElapsed] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const ready = useTutorReady();
@@ -393,21 +401,33 @@ export function AiVerdict({ systemPrompt, guaContext, title, intro, buttonText, 
     if (prevKey.current !== ctxKey) {
       prevKey.current = ctxKey;
       setText('');
+      setReasoning('');
       setError('');
     }
   }, [ctxKey]);
+
+  // 计时：让等待有感知（推理模型先想后答，长文可能需一两分钟）
+  useEffect(() => {
+    if (!busy) return;
+    const t0 = Date.now();
+    setElapsed(0);
+    const timer = setInterval(() => setElapsed(Math.floor((Date.now() - t0) / 1000)), 1000);
+    return () => clearInterval(timer);
+  }, [busy]);
 
   const run = async () => {
     if (busy) return;
     setBusy(true);
     setError('');
     setText('');
+    setReasoning('');
     try {
       const ans = await askTutor(
         systemPrompt,
         guaContext,
         [{ role: 'user', content: askText ?? '请基于以上卦局数据，对我所问之事做完整综合断卦。' }],
         (partial) => setText(partial),
+        (r) => setReasoning(r),
       );
       setText(ans || '（助教未返回内容）');
     } catch (e) {
@@ -442,7 +462,19 @@ export function AiVerdict({ systemPrompt, guaContext, title, intro, buttonText, 
             </button>
           </div>
         )}
-        {busy && !text && <p className="text-xs text-[#a79cc8] py-2">助教正在通盘推演，先思考再作答，约需十几秒…</p>}
+        {busy && !text && (
+          <div className="py-2 space-y-2">
+            <p className="text-xs text-[#a79cc8]">
+              助教正在通盘推演，先思考再作答（已用时 {elapsed} 秒；推理模型长文生成约需 1-2 分钟，属正常，请稍候）…
+            </p>
+            {reasoning && (
+              <div className="max-h-40 overflow-y-auto rounded-lg border border-[#9a86c8]/20 bg-[#120e1a] px-3 py-2">
+                <p className="text-[10px] text-[#8f86a8] mb-1 tracking-wider">思考过程（实时）</p>
+                <p className="text-[11px] leading-relaxed text-[#8f86a8] whitespace-pre-wrap">{reasoning}</p>
+              </div>
+            )}
+          </div>
+        )}
         {text && (
           <div className="text-xs leading-relaxed text-[#ddd6ea]">
             <Md text={text} />
