@@ -1,6 +1,7 @@
 // 全局助教设置：右上角 ⚙ 入口，全站唯一的助教模型配置处
 // 支持任意 OpenAI 兼容端点（端点 URL + API Key + Model ID）；配置只存本机 localStorage
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Settings, X, KeyRound, Trash2, CheckCircle2, ShieldCheck, Globe, Cpu } from 'lucide-react';
 import {
   getTutorConfig, setTutorConfig, probeServerKey,
@@ -88,7 +89,8 @@ export function TutorSettings() {
         <Settings size={16} />
       </button>
 
-      {open && (
+      {/* 弹窗挂到 body，避免顶栏 backdrop-filter 形成包含块导致 fixed 定位失效、被页面内容压层 */}
+      {open && createPortal(
         <div
           className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
           onClick={() => setOpen(false)}
@@ -197,7 +199,8 @@ export function TutorSettings() {
               </p>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
