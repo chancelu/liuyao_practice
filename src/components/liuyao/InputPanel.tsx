@@ -169,15 +169,15 @@ export function InputPanel({
       ) : (
         /* 六爻录入（直排：自初爻向上） */
         <div>
-          <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center justify-between flex-wrap gap-1.5 mb-1.5">
             <label className="text-xs font-semibold text-[#c8bd9c]">六爻卦象（自初爻向上录入）</label>
-            <div className="flex gap-1">
+            <div className="flex gap-1 shrink-0">
               <button onClick={randomCast} title="模拟摇卦"
-                className="btn-ghost text-xs px-2.5 py-1">
+                className="btn-ghost text-xs px-2.5 py-1 whitespace-nowrap">
                 <Dices size={12} /> 摇卦
               </button>
               <button onClick={() => setYaos([7, 7, 7, 7, 7, 7])} title="重置"
-                className="btn-ghost text-xs px-2.5 py-1">
+                className="btn-ghost text-xs px-2.5 py-1 whitespace-nowrap">
                 <RotateCcw size={12} /> 重置
               </button>
             </div>
@@ -187,8 +187,8 @@ export function InputPanel({
               const i = 5 - ri; // 上爻在上显示
               return (
                 <div key={i} className="flex items-center gap-2 border border-[#32281a] rounded-md px-2 py-1.5 bg-[#1d1912]">
-                  <span className="text-xs text-[#8d8670] w-20 shrink-0">{POS[i]}</span>
-                  <div className="grid grid-cols-4 gap-1 flex-1">
+                  <span className="text-[11px] text-[#8d8670] shrink-0 whitespace-nowrap">{POS[i]}</span>
+                  <div className="grid grid-cols-4 gap-1 flex-1 min-w-0">
                     {VALUES.map((v) => {
                       const meta = YAO_META[v];
                       const active = yaos[i] === v;
@@ -200,14 +200,14 @@ export function InputPanel({
                             next[i] = v;
                             setYaos(next);
                           }}
-                          className={`flex flex-col items-center py-1 rounded border text-[10px] leading-tight transition-colors ${
+                          className={`flex flex-col items-center min-w-0 px-0.5 py-1 rounded border text-[10px] leading-tight transition-colors overflow-hidden ${
                             active
                               ? 'border-[#d0604d] bg-[#d0604d] text-white'
                               : 'border-[#3a2f1e] bg-[#131008] text-[#b0a78c] hover:border-[#d0604d]'
                           }`}
                         >
-                          <span className={active ? 'text-white' : 'text-[#e8e1cd]'}>
-                            <YaoStroke yang={meta.yang} moving={meta.moving} size="sm" />
+                          <span className={`w-full ${active ? 'text-white' : 'text-[#e8e1cd]'}`}>
+                            <YaoStroke yang={meta.yang} moving={meta.moving} size="sm" fluid />
                           </span>
                           <span className="mt-0.5">{meta.name}</span>
                         </button>
