@@ -36,13 +36,27 @@ export interface QimenPayload {
   category: string;
 }
 
+export interface MeihuaPayload {
+  method: string;          // 起卦方式 id（time/number2/numstr/text/sound/waiying/manual）
+  date: string;
+  time: string;
+  place: PlaceSel | null;  // null = 按北京时间
+  n1: string; n2: string; addHour: boolean; // 报数
+  digits: string;          // 数字串
+  strokes1: string; strokes2: string; textMode: 'single' | 'double'; // 测字
+  soundCount: string;      // 声音
+  waiyingGua: string;      // 外应上卦
+  manualUpper: string; manualLower: string; manualMoving: number; // 手动直排
+  question: string;
+}
+
 export interface NoteRecord {
   id: string;
   createdAt: number; // epoch ms
-  type: 'liuyao' | 'bazi' | 'qimen';
+  type: 'liuyao' | 'bazi' | 'qimen' | 'meihua';
   title: string;    // 列表标题（如 所问 / 日主 / 局）
   summary: string;  // 当时结论摘要（如 卦名+断语 / 格局+旺衰 / 遁局+值符值使）
-  payload: LiuyaoPayload | BaziPayload | QimenPayload;
+  payload: LiuyaoPayload | BaziPayload | QimenPayload | MeihuaPayload;
   outcome: Outcome;
   outcomeNote: string;
 }
@@ -70,7 +84,7 @@ function writeAll(list: NoteRecord[]) {
   window.dispatchEvent(new Event(NOTEBOOK_EVENT));
 }
 
-export function listNotes(type?: 'liuyao' | 'bazi' | 'qimen'): NoteRecord[] {
+export function listNotes(type?: 'liuyao' | 'bazi' | 'qimen' | 'meihua'): NoteRecord[] {
   const all = readAll().sort((a, b) => b.createdAt - a.createdAt);
   return type ? all.filter((n) => n.type === type) : all;
 }

@@ -17,7 +17,7 @@ function fmtTime(ts: number): string {
 }
 
 interface Props {
-  type: 'liuyao' | 'bazi' | 'qimen';
+  type: 'liuyao' | 'bazi' | 'qimen' | 'meihua';
   /** 生成当前盘面的记录草稿；返回 null 表示当前盘面不可保存 */
   makeCurrent: () => Omit<NoteRecord, 'id' | 'createdAt' | 'outcome' | 'outcomeNote'> | null;
   /** 载回一条记录到排盘输入 */
@@ -44,7 +44,7 @@ export function Notebook({ type, makeCurrent, onLoad }: Props) {
     setTimeout(() => setJustSaved(false), 2000);
   };
 
-  const label = type === 'liuyao' ? '卦' : type === 'qimen' ? '局' : '命盘';
+  const label = type === 'bazi' ? '命盘' : type === 'qimen' ? '局' : '卦';
 
   return (
     <div className="space-y-3">
