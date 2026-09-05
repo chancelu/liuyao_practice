@@ -2,11 +2,13 @@
 import { useState } from 'react';
 import { LiuyaoApp } from './components/liuyao/LiuyaoApp';
 import { BaziApp } from './components/bazi/BaziApp';
+import { QimenApp } from './components/qimen/QimenApp';
 import { TutorSettings } from './components/SettingsKey';
 
 const TABS = [
   { id: 'liuyao', label: '六爻', sub: '纳甲四卷', desc: '京房纳甲 · 以钱代蓍' },
   { id: 'bazi', label: '八字', sub: '子平典籍', desc: '四柱十神 · 旺衰格局' },
+  { id: 'qimen', label: '奇门', sub: '转盘遁甲', desc: '九宫三奇 · 值符值使' },
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
@@ -45,8 +47,8 @@ function Ornament({ className = '' }: { className?: string }) {
 }
 
 export default function App() {
-  const [tab, setTabRaw] = useState<TabId>(() => (location.hash === '#bazi' ? 'bazi' : 'liuyao'));
-  const setTab = (t: TabId) => { setTabRaw(t); location.hash = t === 'bazi' ? '#bazi' : '#liuyao'; };
+  const [tab, setTabRaw] = useState<TabId>(() => (location.hash === '#bazi' ? 'bazi' : location.hash === '#qimen' ? 'qimen' : 'liuyao'));
+  const setTab = (t: TabId) => { setTabRaw(t); location.hash = `#${t}`; };
 
   return (
     <div className="min-h-screen lg:h-screen lg:flex lg:flex-col text-[#e8e1cd]" style={{ fontFamily: '"PingFang SC","Songti SC",serif' }}>
@@ -102,9 +104,10 @@ export default function App() {
         </div>
       </header>
 
-      {/* 两个 Tab 都挂载以保持各自状态，仅切换显示 */}
+      {/* 三个 Tab 都挂载以保持各自状态，仅切换显示 */}
       <div className={tab === 'liuyao' ? 'contents' : 'hidden'}><LiuyaoApp /></div>
       <div className={tab === 'bazi' ? 'contents' : 'hidden'}><BaziApp /></div>
+      <div className={tab === 'qimen' ? 'contents' : 'hidden'}><QimenApp /></div>
     </div>
   );
 }

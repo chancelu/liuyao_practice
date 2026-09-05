@@ -27,13 +27,22 @@ export interface BaziPayload {
   birthYearInput: number;
 }
 
+export interface QimenPayload {
+  date: string;
+  time: string;
+  place: PlaceSel | null; // null = 按北京时间
+  juInput: string;        // 报数定局（空串=按节气定局）
+  question: string;
+  category: string;
+}
+
 export interface NoteRecord {
   id: string;
   createdAt: number; // epoch ms
-  type: 'liuyao' | 'bazi';
-  title: string;    // 列表标题（如 所问 / 日主）
-  summary: string;  // 当时结论摘要（如 卦名+断语 / 格局+旺衰）
-  payload: LiuyaoPayload | BaziPayload;
+  type: 'liuyao' | 'bazi' | 'qimen';
+  title: string;    // 列表标题（如 所问 / 日主 / 局）
+  summary: string;  // 当时结论摘要（如 卦名+断语 / 格局+旺衰 / 遁局+值符值使）
+  payload: LiuyaoPayload | BaziPayload | QimenPayload;
   outcome: Outcome;
   outcomeNote: string;
 }
@@ -61,7 +70,7 @@ function writeAll(list: NoteRecord[]) {
   window.dispatchEvent(new Event(NOTEBOOK_EVENT));
 }
 
-export function listNotes(type?: 'liuyao' | 'bazi'): NoteRecord[] {
+export function listNotes(type?: 'liuyao' | 'bazi' | 'qimen'): NoteRecord[] {
   const all = readAll().sort((a, b) => b.createdAt - a.createdAt);
   return type ? all.filter((n) => n.type === type) : all;
 }

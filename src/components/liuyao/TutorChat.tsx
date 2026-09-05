@@ -180,11 +180,12 @@ export async function askTutor(
 export async function classifyQuestion(
   question: string,
   categories: { id: string; label: string; yongshen: string }[],
+  subject: { name: string; basis: string } = { name: '六爻', basis: '教材为六爻课程卷四（用神卷）' },
 ): Promise<{ categoryId: string; reason: string }> {
-  const list = categories.map((c) => `${c.id}｜${c.label}｜用神取${c.yongshen}爻`).join('\n');
+  const list = categories.map((c) => `${c.id}｜${c.label}｜${c.yongshen}`).join('\n');
   const prompt = [
-    '你是六爻「定用神」助教，教材为六爻课程卷四（用神卷）。',
-    '学员问了一件具体的事，请判断它属于下列哪个测事类别，并说明取用神的理由（注明卷四依据，80字内）。',
+    `你是${subject.name}「定用神」助教，${subject.basis}。`,
+    '学员问了一件具体的事，请判断它属于下列哪个测事类别，并说明取用神的理由（注明依据，80字内）。',
     '注意：同一个问题表面用词与真实所测可能不同，要抓住「最终想知道什么」来取用（如问面试能否通过，实际测录取文书，取父母爻）。',
     '',
     '类别列表（id｜名称｜用神）：',
