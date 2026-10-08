@@ -99,7 +99,10 @@ function kimiTutorProxy(envKey: string): Plugin {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, "")
   return {
-    base: './',
+    // 绝对路径基座：站点同时挂在 yarrow.life/pro 下（服务端反代），
+    // 用 '/pro/' 后 HTML 引用 /pro/assets/* 绝对路径，两个域下都能命中；
+    // 本域的 /pro/* 由 vercel.json rewrite 回 /:path* 兜底
+    base: '/pro/',
     plugins: [inspectAttr(), react(), kimiTutorProxy(env.KIMI_API_KEY ?? "")],
     // 兼容较老浏览器（Vite 7 默认仅支持 baseline-widely-available，旧内核会整页蓝屏）
     build: {
